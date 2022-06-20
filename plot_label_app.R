@@ -23,7 +23,8 @@ ui <- fluidPage(
            column(4, selectInput("col_a", "Accent colour", choices = col_hex))),
   actionButton("plot", "Generate Scatterplot"),
   plotOutput("scatter", click = "plot_click", hover = "plot_hover"),
-  tableOutput("nT_hover")
+  tableOutput("nT_hover"),
+  verbatimTextOutput("sels")
 )
 
 
@@ -64,7 +65,7 @@ server <- function(input, output, session) {
   })
   
   gp_data <- reactive({
-    rep_len(c("Main", "Gp1"), nrow(plot_LFC_data()))
+    rep_len("Main", nrow(plot_LFC_data()))
   })
   
   cols <- reactive({
@@ -75,69 +76,53 @@ server <- function(input, output, session) {
     req(input$plot)
     plot_gp_data <- plot_LFC_data()
     plot_gp_data$Col <- gp_data()
+    plot_gp_data$Col <- ifelse(plot_gp_data$ID %in% selected(), "Gp1", plot_gp_data$Col)
     if ("reverse" %in% input$y_trans) {
       ggplot(data=plot_gp_data) +
         geom_point(aes(x=LFC, y=Score, color = factor(Col)), shape = 16, size = 3) +
         scale_color_manual(values = cols()) +
+        geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Col=="Gp1", ID, '')), 
+                        min.segment.length = 0, size = 3, max.overlaps = 15) +
         scale_y_continuous(trans = "reverse")
     } else {
       ggplot(data=plot_gp_data) +
         geom_point(aes(x=LFC, y=Score, color = factor(Col)), shape = 16, size = 3) +
-        scale_color_manual(values = cols())
+        scale_color_manual(values = cols()) +
+        geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Col=="Gp1", ID, '')), 
+                        min.segment.length = 0, size = 3, max.overlaps = 15)
     }
   })
   
-#  g <- reactive({
-#    if ("reverse" %in% input$y_trans) {
-#      ggplot(data=data.frame(cbind(plot_LFC_data(), Col = gp_data()))) +
-#        geom_point(aes(x=LFC, y=Score, color=Col), shape = 16, size = 3) +
-#        scale_y_continuous(trans = "reverse")
-#    } else {
-#      ggplot(data=data.frame(cbind(plot_LFC_data(), Col = gp_data()))) +
-#        geom_point(aes(x=LFC, y=Score, color=Col), shape = 16, size = 3)
-#    }
-#  })
-#, color = input$col_m
-  
+
   #On mouse hover, display Near Point data
-#  nearTable_h <- reactive({
-#    req(input$plot_hover)
-#    nearPoints(plot_LFC_data(), input$plot_hover)
-#  })
+  nearTable_h <- reactive({
+    req(input$plot_hover)
+    nearPoints(plot_LFC_data(), input$plot_hover)
+  })
   
-#  output$nT_hover <- renderTable(nearTable_h())
+  output$nT_hover <- renderTable(nearTable_h())
   
   #Use NearPoints to add labels to plot on click
   
-#  id_lab <- reactive({
-#    req(input$plot_click)
-#    nearPoints(plot_LFC_data(), input$plot_click)[,1]
-#  })
+  id_lab <- reactive({
+    req(input$plot_click)
+    nearPoints(plot_LFC_data(), input$plot_click)[,1]
+  })
   
-#  selected <- reactiveVal({
-#    vector()
-#  })
+  selected <- reactiveVal({
+    vector()
+  })
   
-
-#  observeEvent(input$plot_click,
-#               selected(c(id_lab(), selected()))  
-#  )
+  observeEvent(input$plot_click,
+               selected(c(id_lab(), selected()))  
+  )
+  
   #If new plot generated, reset selected info
-#  observeEvent(input$scatter,
-#               selected(vector()))
+  observeEvent(input$scatter,
+               selected(vector()))
   
+  output$sels <- renderPrint(selected())
   
-#  output$scatter <- renderPlot({
-#    req(input$plot)
-#    if (length(selected() > 0)) {
-#      tf_labels <- ifelse(plot_LFC_data()$ID %in% selected(), TRUE, FALSE)
-#      g() + 
-#        geom_text_repel(aes(x=LFC, y=Score, label=ifelse(tf_labels, ID, '')), 
-#                        min.segment.length = 0, size = 3, max.overlaps = 15)
-#    } else {
-#      g()
-#    }
-#  })
   
   
 }
