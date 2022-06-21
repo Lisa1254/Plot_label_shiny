@@ -119,7 +119,9 @@ server <- function(input, output, session) {
         scale_color_manual(values = cols()) +
         geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Col=="Gp1", ID, '')), 
                         min.segment.length = 0, size = 3, max.overlaps = 15) +
-        theme_bw() +
+        theme(legend.position = "none", 
+                 panel.background = element_rect(fill = "white"), 
+                 panel.border = element_blank(), axis.line = element_line()) +
         scale_y_continuous(trans = "reverse")
     } else {
       ggplot(data=plot_gp_data) +
@@ -127,7 +129,9 @@ server <- function(input, output, session) {
         scale_color_manual(values = cols()) +
         geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Col=="Gp1", ID, '')), 
                         min.segment.length = 0, size = 3, max.overlaps = 15) +
-        theme_bw()
+        theme(legend.position = "none", 
+                 panel.background = element_rect(fill = "white"), 
+                 panel.border = element_blank(), axis.line = element_line())
     }
   })
   
