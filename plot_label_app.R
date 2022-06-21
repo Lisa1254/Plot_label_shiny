@@ -48,7 +48,8 @@ ui <- fluidPage(
   actionButton("plot", "Generate/Reset Scatterplot"),
 
   fluidRow(column(9, plotOutput("scatter", click = "plot_click", hover = "plot_hover", brush = "plot_brush")),
-           column(3, tableOutput("nT_hover")))
+           column(3, tableOutput("nT_hover"))),
+  
 )
 
 
@@ -151,25 +152,24 @@ server <- function(input, output, session) {
     plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% selected1(), "Gp1", plot_gp_data$Gp)
     plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% selected2(), "Gp2", plot_gp_data$Gp)
     plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% selected3(), "Gp3", plot_gp_data$Gp)
+    plot_gp_data$Gp <- factor(plot_gp_data$Gp)
     if ("reverse" %in% input$y_trans) {
       ggplot(data=plot_gp_data) +
-        geom_point(aes(x=LFC, y=Score, color = factor(Gp)), shape = 16, size = 3) +
-        scale_color_manual(values = cols()) +
+        geom_point(aes(x=LFC, y=Score, color = Gp), shape = 16, size = 3) +
+        scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols()) +
         geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Gp=="Main", '', ID)), 
                         min.segment.length = 0, size = 3, max.overlaps = 15) +
-        theme(legend.position = "none", 
-                 panel.background = element_rect(fill = "white"), 
+        theme(panel.background = element_rect(fill = "white"), 
                  panel.border = element_blank(), axis.line = element_line()) +
         labs(y = input$ylab, x = input$xlab) +
         scale_y_continuous(trans = "reverse")
     } else {
       ggplot(data=plot_gp_data) +
-        geom_point(aes(x=LFC, y=Score, color = factor(Gp)), shape = 16, size = 3) +
-        scale_color_manual(values = cols()) +
+        geom_point(aes(x=LFC, y=Score, color = Gp), shape = 16, size = 3) +
+        scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols()) +
         geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Gp=="Main", '', ID)), 
                         min.segment.length = 0, size = 3, max.overlaps = 15) +
-        theme(legend.position = "none", 
-                 panel.background = element_rect(fill = "white"), 
+        theme(panel.background = element_rect(fill = "white"), 
                  panel.border = element_blank(), axis.line = element_line()) +
         labs(y = input$ylab, x = input$xlab)
     }
