@@ -4,27 +4,33 @@ library(shiny)
 library(ggplot2)
 library(ggrepel)
 
-col_hex <- setNames(c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#E6E6E6"), 
+col_hex <- setNames(c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "lightgray"), 
                     c("Black", "Orange", "Sky Blue", "Bluish Green", "Yellow", "Blue", "Red", "Purple", "Light Gray"))
 
 
 ## UI ----
 ui <- fluidPage(
-  fluidRow(column(5, fileInput("txt_data", "Supply tab delimited .txt file of MAGeCK data", width = "100%")),
-           column(3, actionButton("preview", "Show preview of data"))),
-  tableOutput("head_data"),
+  fluidRow(column(5, fileInput("txt_data", "Supply tab delimited .txt file", width = "100%")),
+           column(3, checkboxInput("preview", "Show preview of data"))),
+  conditionalPanel(
+    condition = "input.preview == true",
+    tableOutput("head_data")),
+  
   fluidRow(column(3, selectInput("name", "Attribute name", choices = NULL)),
            column(3, selectInput("x", "LFC (X values)", choices = NULL))),
-  
-  fluidRow(column(3, selectInput("yn", "Negative Score (Y values)", choices = NULL)),
-           column(3, selectInput("yp", "Positive Score (Y values)", choices = NULL)),
-           column(3,checkboxGroupInput("y_trans", "Transformations for y-axis:", c("log10", "reverse")))),
+  radioButtons("num_y", "Number of Inputs for Y-axis", choices = c("1", "2"), inline = TRUE),
+  conditionalPanel(condition = "input.num_y == 1",
+                   selectInput("y1", "Score (Y values)", choices = NULL)),
+  conditionalPanel(condition = "input.num_y == 2",
+                   fluidRow(column(3, selectInput("yn", "Negative Score (Y values)", choices = NULL)),
+                            column(3, selectInput("yp", "Positive Score (Y values)", choices = NULL)))),
   fluidRow(column(4, selectInput("col_m", "Main colour", choices = col_hex)),
-           column(4, selectInput("col_a", "Accent colour", choices = col_hex))),
+           column(4, selectInput("col_a", "Accent colour", choices = col_hex)),
+           column(4,checkboxGroupInput("y_trans", "Transformations for y-axis:", c("log10", "reverse")))),
   actionButton("plot", "Generate Scatterplot"),
-  plotOutput("scatter", click = "plot_click", hover = "plot_hover"),
-  tableOutput("nT_hover"),
-  verbatimTextOutput("sels")
+  
+  fluidRow(column(9, plotOutput("scatter", click = "plot_click", hover = "plot_hover")),
+           column(3, tableOutput("nT_hover")))
 )
 
 
@@ -36,30 +42,60 @@ server <- function(input, output, session) {
     read.delim(file =input$txt_data$datapath)
   })
 
-  output$head_data <- renderTable({
-    req(input$preview)
-    head(data())
-  })
+  output$head_data <- renderTable(head(data()), rownames = TRUE)
+  
 
   observeEvent(data(), {
     choices <- colnames(data())
-    updateSelectInput(inputId = "name", choices = c("Choose one" = "", choices))
+    updateSelectInput(inputId = "name", choices = c("Choose one" = "", c("Rownames", choices)))
     updateSelectInput(inputId = "x", choices = c("Choose one" = "", choices))
-    updateSelectInput(inputId = "yn", choices = c("Choose one" = "", choices))
-    updateSelectInput(inputId = "yp", choices = c("Choose one" = "", choices))
+    if (input$num_y == "1") {
+      updateSelectInput(inputId = "y1", choices = c("Choose one" = "", choices))
+    } else if (input$num_y == "2") {
+      updateSelectInput(inputId = "yn", choices = c("Choose one" = "", choices))
+      updateSelectInput(inputId = "yp", choices = c("Choose one" = "", choices))
+    }
   })
 
+  observeEvent(input$num_y, {
+    req(input$txt_data)
+    choices <- colnames(data())
+    if (input$num_y == "1") {
+      updateSelectInput(inputId = "y1", choices = c("Choose one" = "", choices))
+    } else if (input$num_y == "2") {
+      updateSelectInput(inputId = "yn", choices = c("Choose one" = "", choices))
+      updateSelectInput(inputId = "yp", choices = c("Choose one" = "", choices))
+    }
+  })
+
+  y_vals <- reactive({
+    req(input$plot)
+    if (input$num_y == "1") {
+      data()[,input$y1]
+    } else if (input$num_y == "2"){
+      ifelse(data()[,input$x] < 0, data()[,input$yn], data()[,input$yp])
+    }
+  })
+  
+  data_names <- reactive({
+    req(input$plot)
+    if (input$name == "Rownames") {
+      rownames(data())
+    } else {
+      data()[,input$name]
+    }
+  })
   
   plot_LFC_data <- reactive({
     req(input$plot)
     if ("log10" %in% input$y_trans){
-      data.frame(ID = data()[,input$name], 
+      data.frame(ID = data_names(), 
                  LFC = data()[,input$x],
-                 Score = log10(ifelse(data()[,input$x] < 0, data()[,input$yn], data()[,input$yp])))
+                 Score = log10(y_vals()))
     } else {
-      data.frame(ID = data()[,input$name], 
+      data.frame(ID = data_names(), 
                  LFC = data()[,input$x],
-                 Score = ifelse(data()[,input$x] < 0, data()[,input$yn], data()[,input$yp]))
+                 Score = y_vals())
     }
     
   })
@@ -73,7 +109,7 @@ server <- function(input, output, session) {
   })
   
   output$scatter <- renderPlot({
-    req(input$plot)
+    input$plot
     plot_gp_data <- plot_LFC_data()
     plot_gp_data$Col <- gp_data()
     plot_gp_data$Col <- ifelse(plot_gp_data$ID %in% selected(), "Gp1", plot_gp_data$Col)
@@ -83,13 +119,15 @@ server <- function(input, output, session) {
         scale_color_manual(values = cols()) +
         geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Col=="Gp1", ID, '')), 
                         min.segment.length = 0, size = 3, max.overlaps = 15) +
+        theme_bw() +
         scale_y_continuous(trans = "reverse")
     } else {
       ggplot(data=plot_gp_data) +
         geom_point(aes(x=LFC, y=Score, color = factor(Col)), shape = 16, size = 3) +
         scale_color_manual(values = cols()) +
         geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Col=="Gp1", ID, '')), 
-                        min.segment.length = 0, size = 3, max.overlaps = 15)
+                        min.segment.length = 0, size = 3, max.overlaps = 15) +
+        theme_bw()
     }
   })
   
@@ -118,11 +156,9 @@ server <- function(input, output, session) {
   )
   
   #If new plot generated, reset selected info
-  observeEvent(input$scatter,
+  observeEvent(input$plot,
                selected(vector()))
-  
-  output$sels <- renderPrint(selected())
-  
+
   
   
 }
