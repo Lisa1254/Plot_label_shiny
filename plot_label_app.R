@@ -50,6 +50,7 @@ ui <- fluidPage(
   fluidRow(column(9, plotOutput("scatter", click = "plot_click", hover = "plot_hover", brush = "plot_brush")),
            column(3, tableOutput("nT_hover"))),
   
+  downloadButton("dl_plot", "Save plot as pdf")
 )
 
 
@@ -144,8 +145,9 @@ server <- function(input, output, session) {
     c("Main" = input$col_m, "Gp1" = input$col1, "Gp2" = input$col2, "Gp3" = input$col3)[1:(input$num_gps+1)]
   })
   
-  
-  output$scatter <- renderPlot({
+  #### For download handler, need to contain all of this within a reactive instead, 
+  #then in download Handler, use ggsave.
+  make_scatter <- reactive({
     input$plot
     plot_gp_data <- plot_LFC_data()
     plot_gp_data$Gp <- gp_data()
@@ -175,7 +177,10 @@ server <- function(input, output, session) {
     }
   })
   
-
+  output$scatter <- renderPlot({
+    make_scatter()
+  })
+  
   #On mouse hover, display Near Point data
   nearTable_h <- reactive({
     req(input$plot_hover)
