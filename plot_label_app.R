@@ -16,20 +16,24 @@ ui <- fluidPage(
     condition = "input.preview == true",
     tableOutput("head_data")),
   
-  fluidRow(column(3, selectInput("name", "Attribute name", choices = NULL)),
-           column(3, selectInput("x", "LFC (X values)", choices = NULL))),
+  fluidRow(column(3, selectInput("name", "Labels for data points", choices = NULL)),
+           column(3, textInput("xlab", "Attribute name for x values", placeholder = "e.g. LFC")),
+           column(3, selectInput("x", "X values", choices = NULL))),
+  
   radioButtons("num_y", "Number of Inputs for Y-axis", choices = c("1", "2"), inline = TRUE),
-  conditionalPanel(condition = "input.num_y == 1",
-                   selectInput("y1", "Score (Y values)", choices = NULL)),
-  conditionalPanel(condition = "input.num_y == 2",
-                   fluidRow(column(3, selectInput("yn", "Negative Score (Y values)", choices = NULL)),
+  fluidRow(column(3, textInput("ylab", "Attribute name for y values", placeholder = "e.g. Score (p97i)")),
+           conditionalPanel(condition = "input.num_y == 1",
+                            column(3, selectInput("y1", "Y values", choices = NULL))),
+           conditionalPanel(condition = "input.num_y == 2",
+                            column(3, selectInput("yn", "Negative Score (Y values)", choices = NULL)),
                             column(3, selectInput("yp", "Positive Score (Y values)", choices = NULL)))),
+
   fluidRow(column(4, selectInput("col_m", "Main colour", choices = col_hex)),
            column(4, selectInput("col_a", "Accent colour", choices = col_hex)),
            column(4,checkboxGroupInput("y_trans", "Transformations for y-axis:", c("log10", "reverse")))),
-  actionButton("plot", "Generate Scatterplot"),
-  
-  fluidRow(column(9, plotOutput("scatter", click = "plot_click", hover = "plot_hover")),
+  actionButton("plot", "Generate/Reset Scatterplot"),
+
+  fluidRow(column(9, plotOutput("scatter", click = "plot_click", hover = "plot_hover", brush = "plot_brush")),
            column(3, tableOutput("nT_hover")))
 )
 
@@ -77,6 +81,7 @@ server <- function(input, output, session) {
     }
   })
   
+  
   data_names <- reactive({
     req(input$plot)
     if (input$name == "Rownames") {
@@ -122,6 +127,7 @@ server <- function(input, output, session) {
         theme(legend.position = "none", 
                  panel.background = element_rect(fill = "white"), 
                  panel.border = element_blank(), axis.line = element_line()) +
+        labs(y = input$ylab, x = input$xlab) +
         scale_y_continuous(trans = "reverse")
     } else {
       ggplot(data=plot_gp_data) +
@@ -131,7 +137,8 @@ server <- function(input, output, session) {
                         min.segment.length = 0, size = 3, max.overlaps = 15) +
         theme(legend.position = "none", 
                  panel.background = element_rect(fill = "white"), 
-                 panel.border = element_blank(), axis.line = element_line())
+                 panel.border = element_blank(), axis.line = element_line()) +
+        labs(y = input$ylab, x = input$xlab)
     }
   })
   
@@ -158,6 +165,14 @@ server <- function(input, output, session) {
   observeEvent(input$plot_click,
                selected(c(id_lab(), selected()))  
   )
+  
+#Add brushed points to selected
+  brush_sel <- reactive({
+    brushedPoints(plot_LFC_data(), input$plot_brush)[,1]
+  })
+  observeEvent(input$plot_brush,
+               selected(c(brush_sel(), selected())))
+
   
   #If new plot generated, reset selected info
   observeEvent(input$plot,
