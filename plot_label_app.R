@@ -1,4 +1,4 @@
-## Libraries ---- 
+## Libraries and Environment ---- 
 
 library(shiny)
 library(purrr)
@@ -13,7 +13,21 @@ condPan01 <- function(number) {
   conditionalPanel(paste0("input.num_gps >=", as.numeric(number)),
                    fluidRow(column(3, textInput(paste0("gp", number), label = paste0("Group Name: "))),
                             column(3, selectInput(paste0("col", number), label = paste0("Colour for Group ", number),
-                                                  choices = col_hex))))
+                                                  choices = col_hex)),
+                            column(3, radioButtons(paste0("type", number), label = paste0("Input Type for Group ", number), choices = c("Plot Interaction", "Specified Values", "Gene Input"))),
+                            conditionalPanel(paste0("input.type", number, " == `Specified Values`"),
+                                             column(3, wellPanel(
+                                               numericInput(paste0("minX", number), "X Value Minumum", value = 0),
+                                               numericInput(paste0("maxX", number), "X Value Maximum", value = 0),
+                                               numericInput(paste0("minY", number), "Y Value Minumum", value = 0),
+                                               numericInput(paste0("maxY", number), "Y Value Maximum", value = 0)
+                                               )
+                                             )
+                                             ),
+                            conditionalPanel(paste0("input.type", number, " == `Gene Input`"),
+                                             column(3,textInput(paste0("genes", number), "Genes of Interest")))
+                            )
+                   )
 }
 map_conds <- map(c(1,2,3), condPan01)
 
@@ -60,7 +74,7 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
-  #---------------------------------
+  #------------------------------------------------
   
   # Upload data and define parameters of scatter plot
   
@@ -129,7 +143,7 @@ server <- function(input, output, session) {
   })
   
   
-  #---------------------------------------------
+  #------------------------------------------------
   
   # Set up graphical parameters for genes of interest, up to three groups
   
@@ -139,14 +153,17 @@ server <- function(input, output, session) {
   observeEvent(input$gp1, {
     updateSelectInput(inputId = "col1", label = paste0("Colour for ", input$gp1))
     updateRadioButtons(inputId = "current_gp", choices =all_labels())
+    updateRadioButtons(inputId = "type1", label = paste0("Input Type for ", input$gp1))
   })
   observeEvent(input$gp2,{
     updateSelectInput(inputId = "col2", label = paste0("Colour for ", input$gp2))
     updateRadioButtons(inputId = "current_gp", choices =all_labels())
+    updateRadioButtons(inputId = "type2", label = paste0("Input Type for ", input$gp2))
   })
   observeEvent(input$gp3,{
     updateSelectInput(inputId = "col3", label = paste0("Colour for ", input$gp3))
     updateRadioButtons(inputId = "current_gp", choices =all_labels())
+    updateRadioButtons(inputId = "type3", label = paste0("Input Type for ", input$gp3))
   })
   
  
@@ -158,7 +175,7 @@ server <- function(input, output, session) {
     c("Main" = input$col_m, "Gp1" = input$col1, "Gp2" = input$col2, "Gp3" = input$col3)[1:(input$num_gps+1)]
   })
   
-  #-----------------------------------------------
+  #------------------------------------------------
   
   # Construct scatter plot
   
@@ -170,25 +187,18 @@ server <- function(input, output, session) {
     plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% selected2(), "Gp2", plot_gp_data$Gp)
     plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% selected3(), "Gp3", plot_gp_data$Gp)
     plot_gp_data$Gp <- factor(plot_gp_data$Gp)
+    g <- ggplot(data=plot_gp_data) +
+      geom_point(aes(x=LFC, y=Score, color = Gp), shape = 16, size = 3) +
+      scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols()) +
+      geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Gp=="Main", '', ID)), 
+                      min.segment.length = 0, size = 3, max.overlaps = 15) +
+      theme(panel.background = element_rect(fill = "white"), 
+            panel.border = element_blank(), axis.line = element_line()) +
+      labs(y = input$ylab, x = input$xlab)
     if ("reverse" %in% input$y_trans) {
-      ggplot(data=plot_gp_data) +
-        geom_point(aes(x=LFC, y=Score, color = Gp), shape = 16, size = 3) +
-        scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols()) +
-        geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Gp=="Main", '', ID)), 
-                        min.segment.length = 0, size = 3, max.overlaps = 15) +
-        theme(panel.background = element_rect(fill = "white"), 
-                 panel.border = element_blank(), axis.line = element_line()) +
-        labs(y = input$ylab, x = input$xlab) +
-        scale_y_continuous(trans = "reverse")
+     g + scale_y_continuous(trans = "reverse")
     } else {
-      ggplot(data=plot_gp_data) +
-        geom_point(aes(x=LFC, y=Score, color = Gp), shape = 16, size = 3) +
-        scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols()) +
-        geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Gp=="Main", '', ID)), 
-                        min.segment.length = 0, size = 3, max.overlaps = 15) +
-        theme(panel.background = element_rect(fill = "white"), 
-                 panel.border = element_blank(), axis.line = element_line()) +
-        labs(y = input$ylab, x = input$xlab)
+      g
     }
   })
   
