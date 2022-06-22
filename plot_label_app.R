@@ -51,6 +51,13 @@ list_split <- function(in_var){
   return(s)
 }
 
+#Function to return genes within desired range
+subset_genes <- function(df, colx, minx, maxx, all_y, miny, maxy, colN) {
+  df2 <- df[which((all_y >= miny) & (all_y <= maxy)),]
+  df2 <- df2[which((df2[,colx] >= minx) & (df2[,colx] <= maxx)),]
+  genes_sub <- as.vector(df2[,colN])
+  return(genes_sub)
+}
 
 ## UI ----
 ui <- fluidPage(
@@ -211,9 +218,28 @@ server <- function(input, output, session) {
     }
   })
  
-
-  cols <- reactive({
-    c("Main" = input$col_m, "Gp1" = input$col1, "Gp2" = input$col2, "Gp3" = input$col3)[1:(input$num_gps+1)]
+  gene_sub1 <- reactive({
+    if (input$type1 == "Specified Values") {
+      subset_genes(data(), input$x, input$minX1, input$maxX1, y_vals(), input$minY1, input$maxY1, input$name)
+    } else {
+      vector()
+    }
+  })
+  
+  gene_sub2 <- reactive({
+    if (input$type2 == "Specified Values") {
+      subset_genes(data(), input$x, input$minX2, input$maxX2, y_vals(), input$minY2, input$maxY2, input$name)
+    } else {
+      vector()
+    }
+  })
+  
+  gene_sub3 <- reactive({
+    if (input$type3 == "Specified Values") {
+      subset_genes(data(), input$x, input$minX3, input$maxX3, y_vals(), input$minY3, input$maxY3, input$name)
+    } else {
+      vector()
+    }
   })
   
   #------------------------------------------------
@@ -225,9 +251,9 @@ server <- function(input, output, session) {
     input$plot
     
     #Define genes to be highlighted
-    all_genes_1 <- c(genes_in1(), selected1())
-    all_genes_2 <- c(genes_in2(), selected2())
-    all_genes_3 <- c(genes_in3(), selected3())
+    all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
+    all_genes_2 <- c(gene_sub2(), genes_in2(), selected2())
+    all_genes_3 <- c(gene_sub3(), genes_in3(), selected3())
     
     #Set up plotting dataframe
     plot_gp_data <- plot_LFC_data()
@@ -242,10 +268,13 @@ server <- function(input, output, session) {
     plot_gp_data_ord <- rbind(plot_gp_data[ind_mains,],
                               plot_gp_data[-ind_mains,])
     
+    #Define colours
+    cols <- c("Main" = input$col_m, "Gp1" = input$col1, "Gp2" = input$col2, "Gp3" = input$col3)[1:(input$num_gps+1)]
+    
     #Set up scatter plot
     g <- ggplot(data=plot_gp_data_ord) +
       geom_point(aes(x=LFC, y=Score, color = Gp), shape = 16, size = 3) +
-      scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols()) +
+      scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols) +
       geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Gp=="Main", '', ID)), 
                       min.segment.length = 0, size = 3, max.overlaps = 15) +
       theme(panel.background = element_rect(fill = "white"), 
@@ -356,6 +385,7 @@ server <- function(input, output, session) {
   output$dl_genes <- downloadHandler(
     filename = "selectedGenes.csv",
     content = function(file) {
+      #dl_gene_df <- data.frame
       genes_sel <- paste0(input$gp1, ",", paste(selected1()[order(selected1())], collapse = ","))
       if (input$num_gps >= 2) {
         genes_sel <- paste0(genes_sel, "\n",
