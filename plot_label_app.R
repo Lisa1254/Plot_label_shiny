@@ -1,37 +1,87 @@
-## Libraries ---- 
+## Libraries and Environment ---- 
 
 library(shiny)
 library(purrr)
 library(ggplot2)
 library(ggrepel)
 
-# 
+# Colour Choices and corresponding hex or R names
 col_hex <- setNames(c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "lightgray"), 
                     c("Black", "Orange", "Sky Blue", "Bluish Green", "Yellow", "Blue", "Red", "Purple", "Light Gray"))
 
+#Reusable conditional for Highlight Groups
 condPan01 <- function(number) {
   conditionalPanel(paste0("input.num_gps >=", as.numeric(number)),
                    fluidRow(column(3, textInput(paste0("gp", number), label = paste0("Group Name: "))),
                             column(3, selectInput(paste0("col", number), label = paste0("Colour for Group ", number),
-                                                  choices = col_hex))))
+                                                  choices = col_hex)),
+                            column(3, radioButtons(paste0("type", number), label = paste0("Input Type for Group ", number), choices = c("Plot Interaction", "Specified Values", "Gene Input"))),
+                            conditionalPanel(paste0("input.type", number, " == `Specified Values`"),
+                                             column(3, wellPanel(
+                                               numericInput(paste0("minX", number), "X Value Minumum", value = 0),
+                                               numericInput(paste0("maxX", number), "X Value Maximum", value = 0),
+                                               numericInput(paste0("minY", number), "Y Value Minumum", value = 0),
+                                               numericInput(paste0("maxY", number), "Y Value Maximum", value = 0)
+                                               )
+                                             )
+                                             ),
+                            conditionalPanel(paste0("input.type", number, " == `Gene Input`"),
+                                             column(3,textAreaInput(paste0("genes", number), "Genes list:", "", width="200px", height="240px")))
+                            )
+                   )
 }
+
+#Apply conditional panel for 3 possible group inputs
 map_conds <- map(c(1,2,3), condPan01)
+
+#Function to parse gene list input 
+list_split <- function(in_var){
+  if(in_var == "") {return(NULL)}
+  
+  s <- unlist(strsplit(
+    unlist(strsplit(
+      unlist(strsplit(
+        unlist(strsplit(toupper(in_var), 
+                        c("[\n]"))),
+        c("[,]"))),
+      c("[:space:]"))),
+    c("\\s")))
+  s <- s[s != ""]
+  
+  return(s)
+}
+
+#Function to return genes within desired range
+subset_genes <- function(df, colx, minx, maxx, all_y, miny, maxy, colN) {
+  df2 <- df[which((all_y >= miny) & (all_y <= maxy)),]
+  df2 <- df2[which((df2[,colx] >= minx) & (df2[,colx] <= maxx)),]
+  genes_sub <- as.vector(df2[,colN])
+  return(genes_sub)
+}
 
 ## UI ----
 ui <- fluidPage(
+  #Title
   titlePanel("Scatterplot with Custom Labels"),
+  
+  #Source data
   fluidRow(column(5, fileInput("txt_data", "Supply tab delimited .txt file", width = "100%")),
-           column(3, checkboxInput("preview", "Show preview of data"))),
+           column(3, wellPanel(checkboxInput("preview", "Show preview of data"),
+                               checkboxInput("summary", "Show summary of data"))
+                  )),
   conditionalPanel(
     condition = "input.preview == true",
     tableOutput("head_data")),
+  conditionalPanel(
+    condition = "input.summary == true",
+    verbatimTextOutput("summary_data")),
   
   fluidRow(column(3, selectInput("name", "Labels for data points", choices = NULL)),
            column(3, textInput("xlab", "Attribute name for x values", placeholder = "e.g. LFC")),
            column(3, selectInput("x", "X values", choices = NULL))),
   
   radioButtons("num_y", "Number of Inputs for Y-axis", choices = c("1", "2"), inline = TRUE),
-  fluidRow(column(3, textInput("ylab", "Attribute name for y values", placeholder = "e.g. Score (p97i)")),
+  fluidRow(column(3, textInput("ylab", "Attribute name for y values", placeholder = "e.g. Score (log10)")),
            conditionalPanel(condition = "input.num_y == 1",
                             column(3, selectInput("y1", "Y values", choices = NULL))),
            conditionalPanel(condition = "input.num_y == 2",
@@ -52,7 +102,8 @@ ui <- fluidPage(
            column(3, tableOutput("nT_hover"))),
 
   fluidRow(column(4, downloadButton("dl_plot", "Save plot as pdf")),
-           column(4, downloadButton("dl_genes", "Save selected genes")))
+           column(4, downloadButton("dl_genes", "Save selected genes"))),
+
 )
 
 
@@ -60,7 +111,7 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
-  #---------------------------------
+  #------------------------------------------------
   
   # Upload data and define parameters of scatter plot
   
@@ -70,7 +121,7 @@ server <- function(input, output, session) {
   })
 
   output$head_data <- renderTable(head(data()), rownames = TRUE)
-  
+  output$summary_data <- renderPrint(summary(data()))
 
   observeEvent(data(), {
     choices <- colnames(data())
@@ -129,7 +180,7 @@ server <- function(input, output, session) {
   })
   
   
-  #---------------------------------------------
+  #------------------------------------------------
   
   # Set up graphical parameters for genes of interest, up to three groups
   
@@ -139,56 +190,111 @@ server <- function(input, output, session) {
   observeEvent(input$gp1, {
     updateSelectInput(inputId = "col1", label = paste0("Colour for ", input$gp1))
     updateRadioButtons(inputId = "current_gp", choices =all_labels())
+    updateRadioButtons(inputId = "type1", label = paste0("Input Type for ", input$gp1))
   })
   observeEvent(input$gp2,{
     updateSelectInput(inputId = "col2", label = paste0("Colour for ", input$gp2))
     updateRadioButtons(inputId = "current_gp", choices =all_labels())
+    updateRadioButtons(inputId = "type2", label = paste0("Input Type for ", input$gp2))
   })
   observeEvent(input$gp3,{
     updateSelectInput(inputId = "col3", label = paste0("Colour for ", input$gp3))
     updateRadioButtons(inputId = "current_gp", choices =all_labels())
+    updateRadioButtons(inputId = "type3", label = paste0("Input Type for ", input$gp3))
   })
   
+  genes_in1 <- reactive({
+    if (input$type1 == "Gene Input") {
+      list_split(input$genes1)
+    } else {
+      vector()
+    }
+  })
+  
+  genes_in2 <- reactive({
+    if (input$type2 == "Gene Input") {
+      list_split(input$genes2)
+    } else {
+      vector()
+    }
+  })
+  
+  genes_in3 <- reactive({
+    if (input$type3 == "Gene Input") {
+      list_split(input$genes3)
+    } else {
+      vector()
+    }
+  })
  
-  gp_data <- reactive({
-    rep_len("Main", nrow(plot_LFC_data()))
+  gene_sub1 <- reactive({
+    if (input$type1 == "Specified Values") {
+      subset_genes(data(), input$x, input$minX1, input$maxX1, y_vals(), input$minY1, input$maxY1, input$name)
+    } else {
+      vector()
+    }
   })
   
-  cols <- reactive({
-    c("Main" = input$col_m, "Gp1" = input$col1, "Gp2" = input$col2, "Gp3" = input$col3)[1:(input$num_gps+1)]
+  gene_sub2 <- reactive({
+    if (input$type2 == "Specified Values") {
+      subset_genes(data(), input$x, input$minX2, input$maxX2, y_vals(), input$minY2, input$maxY2, input$name)
+    } else {
+      vector()
+    }
   })
   
-  #-----------------------------------------------
+  gene_sub3 <- reactive({
+    if (input$type3 == "Specified Values") {
+      subset_genes(data(), input$x, input$minX3, input$maxX3, y_vals(), input$minY3, input$maxY3, input$name)
+    } else {
+      vector()
+    }
+  })
+  
+  #------------------------------------------------
   
   # Construct scatter plot
   
   make_scatter <- reactive({
+    #Construct on hitting the plot button
     input$plot
+    
+    #Define genes to be highlighted
+    all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
+    all_genes_2 <- c(gene_sub2(), genes_in2(), selected2())
+    all_genes_3 <- c(gene_sub3(), genes_in3(), selected3())
+    
+    #Set up plotting dataframe
     plot_gp_data <- plot_LFC_data()
-    plot_gp_data$Gp <- gp_data()
-    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% selected1(), "Gp1", plot_gp_data$Gp)
-    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% selected2(), "Gp2", plot_gp_data$Gp)
-    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% selected3(), "Gp3", plot_gp_data$Gp)
+    plot_gp_data$Gp <- rep_len("Main", nrow(plot_gp_data))
+    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_1, "Gp1", plot_gp_data$Gp)
+    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_2, "Gp2", plot_gp_data$Gp)
+    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_3, "Gp3", plot_gp_data$Gp)
     plot_gp_data$Gp <- factor(plot_gp_data$Gp)
+    
+    #To get input genes plotted last, and therefore with the colour displaying when cluttered, organize those points to the bottom. For now, will just put all "Main" at the top, but consider adding feature to check for if input type is a gene list, as that gets priority to the bottom rather than a selection type
+    ind_mains <- which(plot_gp_data$Gp == "Main")
+    plot_gp_data_ord <- rbind(plot_gp_data[ind_mains,],
+                              plot_gp_data[-ind_mains,])
+    
+    #Define colours
+    cols <- c("Main" = input$col_m, "Gp1" = input$col1, "Gp2" = input$col2, "Gp3" = input$col3)[1:(input$num_gps+1)]
+    
+    #Set up scatter plot
+    g <- ggplot(data=plot_gp_data_ord) +
+      geom_point(aes(x=LFC, y=Score, color = Gp), shape = 16, size = 3) +
+      scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols) +
+      geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Gp=="Main", '', ID)), 
+                      min.segment.length = 0, size = 3, max.overlaps = 15) +
+      theme(panel.background = element_rect(fill = "white"), 
+            panel.border = element_blank(), axis.line = element_line()) +
+      labs(y = input$ylab, x = input$xlab)
+    
+    #Reverse y-axis if requested
     if ("reverse" %in% input$y_trans) {
-      ggplot(data=plot_gp_data) +
-        geom_point(aes(x=LFC, y=Score, color = Gp), shape = 16, size = 3) +
-        scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols()) +
-        geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Gp=="Main", '', ID)), 
-                        min.segment.length = 0, size = 3, max.overlaps = 15) +
-        theme(panel.background = element_rect(fill = "white"), 
-                 panel.border = element_blank(), axis.line = element_line()) +
-        labs(y = input$ylab, x = input$xlab) +
-        scale_y_continuous(trans = "reverse")
+     g + scale_y_continuous(trans = "reverse")
     } else {
-      ggplot(data=plot_gp_data) +
-        geom_point(aes(x=LFC, y=Score, color = Gp), shape = 16, size = 3) +
-        scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols()) +
-        geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Gp=="Main", '', ID)), 
-                        min.segment.length = 0, size = 3, max.overlaps = 15) +
-        theme(panel.background = element_rect(fill = "white"), 
-                 panel.border = element_blank(), axis.line = element_line()) +
-        labs(y = input$ylab, x = input$xlab)
+      g
     }
   })
   
@@ -212,7 +318,14 @@ server <- function(input, output, session) {
   
   id_lab <- reactive({
     req(input$plot_click)
-    nearPoints(plot_LFC_data(), input$plot_click)[,1]
+    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Interaction")) {
+      nearPoints(plot_LFC_data(), input$plot_click)[,1]
+    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Interaction")) {
+      nearPoints(plot_LFC_data(), input$plot_click)[,1]
+    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Interaction")) {
+      nearPoints(plot_LFC_data(), input$plot_click)[,1]
+    } 
+    
   })
   
   selected1 <- reactiveVal({
@@ -236,7 +349,15 @@ server <- function(input, output, session) {
   
 #Add brushed points to selected
   brush_sel <- reactive({
-    brushedPoints(plot_LFC_data(), input$plot_brush)[,1]
+    req(input$plot_brush)
+    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Interaction")) {
+      brushedPoints(plot_LFC_data(), input$plot_brush)[,1]
+    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Interaction")) {
+      brushedPoints(plot_LFC_data(), input$plot_brush)[,1]
+    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Interaction")) {
+      brushedPoints(plot_LFC_data(), input$plot_brush)[,1]
+    }
+    
   })
   observeEvent(input$plot_brush,{
     gp_sel <- paste0("gp", as.character(which(all_labels() == input$current_gp)))
@@ -270,21 +391,40 @@ server <- function(input, output, session) {
   
   
   #Download selected genes
+
   output$dl_genes <- downloadHandler(
-    filename = "selectedGenes.csv",
+    filename = "selectedGenes.txt",
     content = function(file) {
-      genes_sel <- paste0(input$gp1, ",", paste(selected1()[order(selected1())], collapse = ","))
+      #Define genes to be highlighted
+      all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
+      all_genes_1_ind <- which(data_names() %in% all_genes_1)
+      dl_gene_df <- data.frame(Gene = all_genes_1, 
+                               Xval = data()[all_genes_1_ind,input$x],
+                               Yval = y_vals()[all_genes_1_ind],
+                               Group = rep(input$gp1, length(all_genes_1)))
+
       if (input$num_gps >= 2) {
-        genes_sel <- paste0(genes_sel, "\n",
-                            paste0(input$gp2, ",", paste(selected2()[order(selected2())], collapse = ","))
-                            )
+        all_genes_2 <- c(gene_sub2(), genes_in2(), selected2())
+        all_genes_2_ind <- which(data_names() %in% all_genes_2)
+        dl_gene_df2 <- data.frame(Gene = all_genes_2, 
+                                  Xval = data()[all_genes_2_ind,input$x],
+                                  Yval = y_vals()[all_genes_2_ind],
+                                  Group = rep(input$gp2, length(all_genes_2)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_df2)
+
       }
       if (input$num_gps == 3) {
-        genes_sel <- paste0(genes_sel, "\n",
-                            paste0(input$gp3, ",", paste(selected3()[order(selected3())], collapse = ","))
-                            )
+        all_genes_3 <- c(gene_sub3(), genes_in3(), selected3())
+        all_genes_3_ind <- which(data_names() %in% all_genes_3)
+        dl_gene_df3 <- data.frame(Gene = all_genes_3, 
+                                  Xval = data()[all_genes_3_ind,input$x],
+                                  Yval = y_vals()[all_genes_3_ind],
+                                  Group = rep(input$gp3, length(all_genes_3)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_df3)
+
       }
-      write.csv(genes_sel, file, row.names = F, quote = F)
+      colnames(dl_gene_df)[c(2,3)] <- c(input$xlab, input$ylab)
+      write.table(dl_gene_df, file, row.names = F, quote = F)
     }
   )
 
