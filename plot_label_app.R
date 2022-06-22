@@ -52,6 +52,9 @@ list_split <- function(in_var){
 }
 
 #Function to return genes within desired range
+#To fix this to include rownames as option, just remove colN altogether from this function. Update the use downstream to reflect type of name input and extract the column or rownames from there.
+#Also, for the input of selecting where the names are coming from, use the list format within the choices, so that it is clear that the options are rownames of the dataframe, or one of these colnames.
+#While I'm at it updating that, should probably update the x/y placeholders from Choose One to something like Select a Dataframe Column to be more explicit about where the information is coming from.
 subset_genes <- function(df, colx, minx, maxx, all_y, miny, maxy, colN) {
   df2 <- df[which((all_y >= miny) & (all_y <= maxy)),]
   df2 <- df2[which((df2[,colx] >= minx) & (df2[,colx] <= maxx)),]
