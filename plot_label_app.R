@@ -5,6 +5,7 @@ library(purrr)
 library(ggplot2)
 library(ggrepel)
 
+# 
 col_hex <- setNames(c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "lightgray"), 
                     c("Black", "Orange", "Sky Blue", "Bluish Green", "Yellow", "Blue", "Red", "Purple", "Light Gray"))
 
@@ -49,13 +50,20 @@ ui <- fluidPage(
 
   fluidRow(column(9, plotOutput("scatter", click = "plot_click", hover = "plot_hover", brush = "plot_brush")),
            column(3, tableOutput("nT_hover"))),
-  
+
+  fluidRow(column(4, downloadButton("dl_plot", "Save plot as pdf")),
+           column(4, downloadButton("dl_genes", "Save selected genes")))
 )
 
 
 ## SERVER ----
 
 server <- function(input, output, session) {
+  
+  #---------------------------------
+  
+  # Upload data and define parameters of scatter plot
+  
   data <- reactive({
     req(input$txt_data)
     read.delim(file =input$txt_data$datapath)
@@ -106,6 +114,25 @@ server <- function(input, output, session) {
     }
   })
   
+  plot_LFC_data <- reactive({
+    req(input$plot)
+    if ("log10" %in% input$y_trans){
+      data.frame(ID = data_names(), 
+                 LFC = data()[,input$x],
+                 Score = log10(y_vals()))
+    } else {
+      data.frame(ID = data_names(), 
+                 LFC = data()[,input$x],
+                 Score = y_vals())
+    }
+    
+  })
+  
+  
+  #---------------------------------------------
+  
+  # Set up graphical parameters for genes of interest, up to three groups
+  
   all_labels <- reactive(c(input$gp1, input$gp2, input$gp3)[1:input$num_gps])
   
   #Need to figure out how to better iterate or make a module/function for this
@@ -122,20 +149,7 @@ server <- function(input, output, session) {
     updateRadioButtons(inputId = "current_gp", choices =all_labels())
   })
   
-  plot_LFC_data <- reactive({
-    req(input$plot)
-    if ("log10" %in% input$y_trans){
-      data.frame(ID = data_names(), 
-                 LFC = data()[,input$x],
-                 Score = log10(y_vals()))
-    } else {
-      data.frame(ID = data_names(), 
-                 LFC = data()[,input$x],
-                 Score = y_vals())
-    }
-    
-  })
-  
+ 
   gp_data <- reactive({
     rep_len("Main", nrow(plot_LFC_data()))
   })
@@ -144,8 +158,11 @@ server <- function(input, output, session) {
     c("Main" = input$col_m, "Gp1" = input$col1, "Gp2" = input$col2, "Gp3" = input$col3)[1:(input$num_gps+1)]
   })
   
+  #-----------------------------------------------
   
-  output$scatter <- renderPlot({
+  # Construct scatter plot
+  
+  make_scatter <- reactive({
     input$plot
     plot_gp_data <- plot_LFC_data()
     plot_gp_data$Gp <- gp_data()
@@ -175,7 +192,14 @@ server <- function(input, output, session) {
     }
   })
   
-
+  output$scatter <- renderPlot({
+    make_scatter()
+  })
+  
+  #------------------------------------------------
+  
+  # Use mouse input to select points of interest
+  
   #On mouse hover, display Near Point data
   nearTable_h <- reactive({
     req(input$plot_hover)
@@ -204,9 +228,9 @@ server <- function(input, output, session) {
   observeEvent(input$plot_click, {
     gp_sel <- paste0("gp", as.character(which(all_labels() == input$current_gp)))
     switch(gp_sel,
-           gp1 = selected1(c(id_lab(), selected1())),
-           gp2 = selected2(c(id_lab(), selected2())),
-           gp3 = selected3(c(id_lab(), selected3()))
+           gp1 = selected1(unique(c(id_lab(), selected1()))),
+           gp2 = selected2(unique(c(id_lab(), selected2()))),
+           gp3 = selected3(unique(c(id_lab(), selected3())))
     )
   })
   
@@ -217,9 +241,9 @@ server <- function(input, output, session) {
   observeEvent(input$plot_brush,{
     gp_sel <- paste0("gp", as.character(which(all_labels() == input$current_gp)))
     switch(gp_sel,
-           gp1 = selected1(c(brush_sel(), selected1())),
-           gp2 = selected2(c(brush_sel(), selected2())),
-           gp3 = selected3(c(brush_sel(), selected3()))
+           gp1 = selected1(unique(c(brush_sel(), selected1()))),
+           gp2 = selected2(unique(c(brush_sel(), selected2()))),
+           gp3 = selected3(unique(c(brush_sel(), selected3())))
     )
   })
   
@@ -230,6 +254,40 @@ server <- function(input, output, session) {
     selected3(vector())
   })
   
+  #------------------------------------------------
+  
+  # Download plot and gene data
+  
+  #Download plot
+  output$dl_plot <- downloadHandler(
+    filename = "plotImageScatter.pdf",
+    content = function(file) {
+    ggsave(make_scatter(), 
+           file = file, 
+           device = "pdf", width = 35, height = 25, units = "cm")
+    }
+    )
+  
+  
+  #Download selected genes
+  output$dl_genes <- downloadHandler(
+    filename = "selectedGenes.csv",
+    content = function(file) {
+      genes_sel <- paste0(input$gp1, ",", paste(selected1()[order(selected1())], collapse = ","))
+      if (input$num_gps >= 2) {
+        genes_sel <- paste0(genes_sel, "\n",
+                            paste0(input$gp2, ",", paste(selected2()[order(selected2())], collapse = ","))
+                            )
+      }
+      if (input$num_gps == 3) {
+        genes_sel <- paste0(genes_sel, "\n",
+                            paste0(input$gp3, ",", paste(selected3()[order(selected3())], collapse = ","))
+                            )
+      }
+      write.csv(genes_sel, file, row.names = F, quote = F)
+    }
+  )
+
   
 }
 
