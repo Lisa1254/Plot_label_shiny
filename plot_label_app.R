@@ -61,19 +61,27 @@ subset_genes <- function(df, colx, minx, maxx, all_y, miny, maxy, colN) {
 
 ## UI ----
 ui <- fluidPage(
+  #Title
   titlePanel("Scatterplot with Custom Labels"),
+  
+  #Source data
   fluidRow(column(5, fileInput("txt_data", "Supply tab delimited .txt file", width = "100%")),
-           column(3, checkboxInput("preview", "Show preview of data"))),
+           column(3, wellPanel(checkboxInput("preview", "Show preview of data"),
+                               checkboxInput("summary", "Show summary of data"))
+                  )),
   conditionalPanel(
     condition = "input.preview == true",
     tableOutput("head_data")),
+  conditionalPanel(
+    condition = "input.summary == true",
+    verbatimTextOutput("summary_data")),
   
   fluidRow(column(3, selectInput("name", "Labels for data points", choices = NULL)),
            column(3, textInput("xlab", "Attribute name for x values", placeholder = "e.g. LFC")),
            column(3, selectInput("x", "X values", choices = NULL))),
   
   radioButtons("num_y", "Number of Inputs for Y-axis", choices = c("1", "2"), inline = TRUE),
-  fluidRow(column(3, textInput("ylab", "Attribute name for y values", placeholder = "e.g. Score (p97i)")),
+  fluidRow(column(3, textInput("ylab", "Attribute name for y values", placeholder = "e.g. Score (log10)")),
            conditionalPanel(condition = "input.num_y == 1",
                             column(3, selectInput("y1", "Y values", choices = NULL))),
            conditionalPanel(condition = "input.num_y == 2",
@@ -94,7 +102,8 @@ ui <- fluidPage(
            column(3, tableOutput("nT_hover"))),
 
   fluidRow(column(4, downloadButton("dl_plot", "Save plot as pdf")),
-           column(4, downloadButton("dl_genes", "Save selected genes")))
+           column(4, downloadButton("dl_genes", "Save selected genes"))),
+
 )
 
 
@@ -112,7 +121,7 @@ server <- function(input, output, session) {
   })
 
   output$head_data <- renderTable(head(data()), rownames = TRUE)
-  
+  output$summary_data <- renderPrint(summary(data()))
 
   observeEvent(data(), {
     choices <- colnames(data())
@@ -382,22 +391,40 @@ server <- function(input, output, session) {
   
   
   #Download selected genes
+
   output$dl_genes <- downloadHandler(
-    filename = "selectedGenes.csv",
+    filename = "selectedGenes.txt",
     content = function(file) {
-      #dl_gene_df <- data.frame
-      genes_sel <- paste0(input$gp1, ",", paste(selected1()[order(selected1())], collapse = ","))
+      #Define genes to be highlighted
+      all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
+      all_genes_1_ind <- which(data_names() %in% all_genes_1)
+      dl_gene_df <- data.frame(Gene = all_genes_1, 
+                               Xval = data()[all_genes_1_ind,input$x],
+                               Yval = y_vals()[all_genes_1_ind],
+                               Group = rep(input$gp1, length(all_genes_1)))
+
       if (input$num_gps >= 2) {
-        genes_sel <- paste0(genes_sel, "\n",
-                            paste0(input$gp2, ",", paste(selected2()[order(selected2())], collapse = ","))
-                            )
+        all_genes_2 <- c(gene_sub2(), genes_in2(), selected2())
+        all_genes_2_ind <- which(data_names() %in% all_genes_2)
+        dl_gene_df2 <- data.frame(Gene = all_genes_2, 
+                                  Xval = data()[all_genes_2_ind,input$x],
+                                  Yval = y_vals()[all_genes_2_ind],
+                                  Group = rep(input$gp2, length(all_genes_2)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_df2)
+
       }
       if (input$num_gps == 3) {
-        genes_sel <- paste0(genes_sel, "\n",
-                            paste0(input$gp3, ",", paste(selected3()[order(selected3())], collapse = ","))
-                            )
+        all_genes_3 <- c(gene_sub3(), genes_in3(), selected3())
+        all_genes_3_ind <- which(data_names() %in% all_genes_3)
+        dl_gene_df3 <- data.frame(Gene = all_genes_3, 
+                                  Xval = data()[all_genes_3_ind,input$x],
+                                  Yval = y_vals()[all_genes_3_ind],
+                                  Group = rep(input$gp3, length(all_genes_3)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_df3)
+
       }
-      write.csv(genes_sel, file, row.names = F, quote = F)
+      colnames(dl_gene_df)[c(2,3)] <- c(input$xlab, input$ylab)
+      write.table(dl_gene_df, file, row.names = F, quote = F)
     }
   )
 
