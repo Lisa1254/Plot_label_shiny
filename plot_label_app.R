@@ -5,10 +5,11 @@ library(purrr)
 library(ggplot2)
 library(ggrepel)
 
-# 
+# Colour Choices and corresponding hex or R names
 col_hex <- setNames(c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "lightgray"), 
                     c("Black", "Orange", "Sky Blue", "Bluish Green", "Yellow", "Blue", "Red", "Purple", "Light Gray"))
 
+#Reusable conditional for Highlight Groups
 condPan01 <- function(number) {
   conditionalPanel(paste0("input.num_gps >=", as.numeric(number)),
                    fluidRow(column(3, textInput(paste0("gp", number), label = paste0("Group Name: "))),
@@ -25,11 +26,31 @@ condPan01 <- function(number) {
                                              )
                                              ),
                             conditionalPanel(paste0("input.type", number, " == `Gene Input`"),
-                                             column(3,textInput(paste0("genes", number), "Genes of Interest")))
+                                             column(3,textAreaInput(paste0("genes", number), "Genes list:", "", width="200px", height="240px")))
                             )
                    )
 }
+
+#Apply conditional panel for 3 possible group inputs
 map_conds <- map(c(1,2,3), condPan01)
+
+#Function to parse gene list input 
+list_split <- function(in_var){
+  if(in_var == "") {return(NULL)}
+  
+  s <- unlist(strsplit(
+    unlist(strsplit(
+      unlist(strsplit(
+        unlist(strsplit(toupper(in_var), 
+                        c("[\n]"))),
+        c("[,]"))),
+      c("[:space:]"))),
+    c("\\s")))
+  s <- s[s != ""]
+  
+  return(s)
+}
+
 
 ## UI ----
 ui <- fluidPage(
@@ -166,11 +187,31 @@ server <- function(input, output, session) {
     updateRadioButtons(inputId = "type3", label = paste0("Input Type for ", input$gp3))
   })
   
- 
-  gp_data <- reactive({
-    rep_len("Main", nrow(plot_LFC_data()))
+  genes_in1 <- reactive({
+    if (input$type1 == "Gene Input") {
+      list_split(input$genes1)
+    } else {
+      vector()
+    }
   })
   
+  genes_in2 <- reactive({
+    if (input$type2 == "Gene Input") {
+      list_split(input$genes2)
+    } else {
+      vector()
+    }
+  })
+  
+  genes_in3 <- reactive({
+    if (input$type3 == "Gene Input") {
+      list_split(input$genes3)
+    } else {
+      vector()
+    }
+  })
+ 
+
   cols <- reactive({
     c("Main" = input$col_m, "Gp1" = input$col1, "Gp2" = input$col2, "Gp3" = input$col3)[1:(input$num_gps+1)]
   })
@@ -180,14 +221,29 @@ server <- function(input, output, session) {
   # Construct scatter plot
   
   make_scatter <- reactive({
+    #Construct on hitting the plot button
     input$plot
+    
+    #Define genes to be highlighted
+    all_genes_1 <- c(genes_in1(), selected1())
+    all_genes_2 <- c(genes_in2(), selected2())
+    all_genes_3 <- c(genes_in3(), selected3())
+    
+    #Set up plotting dataframe
     plot_gp_data <- plot_LFC_data()
-    plot_gp_data$Gp <- gp_data()
-    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% selected1(), "Gp1", plot_gp_data$Gp)
-    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% selected2(), "Gp2", plot_gp_data$Gp)
-    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% selected3(), "Gp3", plot_gp_data$Gp)
+    plot_gp_data$Gp <- rep_len("Main", nrow(plot_gp_data))
+    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_1, "Gp1", plot_gp_data$Gp)
+    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_2, "Gp2", plot_gp_data$Gp)
+    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_3, "Gp3", plot_gp_data$Gp)
     plot_gp_data$Gp <- factor(plot_gp_data$Gp)
-    g <- ggplot(data=plot_gp_data) +
+    
+    #To get input genes plotted last, and therefore with the colour displaying when cluttered, organize those points to the bottom. For now, will just put all "Main" at the top, but consider adding feature to check for if input type is a gene list, as that gets priority to the bottom rather than a selection type
+    ind_mains <- which(plot_gp_data$Gp == "Main")
+    plot_gp_data_ord <- rbind(plot_gp_data[ind_mains,],
+                              plot_gp_data[-ind_mains,])
+    
+    #Set up scatter plot
+    g <- ggplot(data=plot_gp_data_ord) +
       geom_point(aes(x=LFC, y=Score, color = Gp), shape = 16, size = 3) +
       scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols()) +
       geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Gp=="Main", '', ID)), 
@@ -195,6 +251,8 @@ server <- function(input, output, session) {
       theme(panel.background = element_rect(fill = "white"), 
             panel.border = element_blank(), axis.line = element_line()) +
       labs(y = input$ylab, x = input$xlab)
+    
+    #Reverse y-axis if requested
     if ("reverse" %in% input$y_trans) {
      g + scale_y_continuous(trans = "reverse")
     } else {
@@ -222,7 +280,14 @@ server <- function(input, output, session) {
   
   id_lab <- reactive({
     req(input$plot_click)
-    nearPoints(plot_LFC_data(), input$plot_click)[,1]
+    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Interaction")) {
+      nearPoints(plot_LFC_data(), input$plot_click)[,1]
+    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Interaction")) {
+      nearPoints(plot_LFC_data(), input$plot_click)[,1]
+    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Interaction")) {
+      nearPoints(plot_LFC_data(), input$plot_click)[,1]
+    } 
+    
   })
   
   selected1 <- reactiveVal({
@@ -246,7 +311,15 @@ server <- function(input, output, session) {
   
 #Add brushed points to selected
   brush_sel <- reactive({
-    brushedPoints(plot_LFC_data(), input$plot_brush)[,1]
+    req(input$plot_brush)
+    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Interaction")) {
+      brushedPoints(plot_LFC_data(), input$plot_brush)[,1]
+    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Interaction")) {
+      brushedPoints(plot_LFC_data(), input$plot_brush)[,1]
+    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Interaction")) {
+      brushedPoints(plot_LFC_data(), input$plot_brush)[,1]
+    }
+    
   })
   observeEvent(input$plot_brush,{
     gp_sel <- paste0("gp", as.character(which(all_labels() == input$current_gp)))
