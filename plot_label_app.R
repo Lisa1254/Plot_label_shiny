@@ -289,8 +289,7 @@ server <- function(input, output, session) {
       geom_point(aes(x=LFC, y=Score, color = Gp), shape = 16, size = 3) +
       scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols) +
       geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Gp=="Main", '', ID)), 
-                      min.segment.length = 0, size = 3, max.overlaps = 5,
-                      nudge_x = -0.2, direction = "y", hjust = "right") +
+                      min.segment.length = 0, size = 3, max.overlaps = 15) +
       theme(panel.background = element_rect(fill = "white"), 
             panel.border = element_blank(), axis.line = element_line()) +
       labs(y = input$ylab, x = input$xlab)
