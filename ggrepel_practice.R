@@ -28,8 +28,8 @@ plot_gp_data_ord <- rbind(plot_gp_data[ind_mains,],
 #Define colours
 cols <- c("Main" = "lightgray", "Gp1" = "#56B4E9", "Gp2" = "#009E73", "Gp3" = "#CC79A7")
 
-ggplot(data=plot_gp_data_ord) +
-  geom_point(aes(x=LFC, y=Score, color = Gp), shape = 16, size = 3) +
+ggplot(data=plot_gp_data_ord, mapping = aes(x=LFC, y=Score)) +
+  geom_point(data=plot_gp_data_ord[ind_mains,], color = "lightgray", shape = 16, size = 3) +
   scale_color_manual(name = "Groups", labels = c("NA", all_labels), values = cols) +
   geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Gp=="Main", '', ID)), 
                   min.segment.length = 0, size = 3, max.overlaps = 5,
