@@ -101,9 +101,12 @@ ui <- fluidPage(
 
   fluidRow(column(9, plotOutput("scatter", click = "plot_click", hover = "plot_hover", brush = "plot_brush")),
            column(3, tableOutput("nT_hover"))),
+  
+  verbatimTextOutput(outputId='ggplot_warnings'),
 
   fluidRow(column(4, downloadButton("dl_plot", "Save plot as pdf")),
            column(4, downloadButton("dl_genes", "Save selected genes"))),
+  tags$br()
 
 )
 
@@ -301,6 +304,22 @@ server <- function(input, output, session) {
   
   output$scatter <- renderPlot({
     make_scatter()
+  })
+  
+  dataerrors <- reactive({
+    tryCatch({
+      print(make_scatter())
+    }, message = function(e) {
+      return(e$message)
+    }, warning = function(e) {
+      return(e$message)
+    }, error = function(e) {
+      return(e$message)
+    })
+  })
+  
+  output$ggplot_warnings <- renderPrint({
+    dataerrors()
   })
   
   #------------------------------------------------
