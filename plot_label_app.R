@@ -129,13 +129,15 @@ server <- function(input, output, session) {
 
   observeEvent(data(), {
     choices <- colnames(data())
-    updateSelectInput(inputId = "name", choices = c("Choose one" = "", c("Rownames", choices)))
-    updateSelectInput(inputId = "x", choices = c("Choose one" = "", choices))
+    updateSelectInput(inputId = "name", choices = c("Choose one" = "", 
+                                                    list(`By rownames` = "Rownames", 
+                                                         `By column` = choices)))
+    updateSelectInput(inputId = "x", choices = c("Choose column" = "", choices))
     if (input$num_y == "1") {
-      updateSelectInput(inputId = "y1", choices = c("Choose one" = "", choices))
+      updateSelectInput(inputId = "y1", choices = c("Choose column" = "", choices))
     } else if (input$num_y == "2") {
-      updateSelectInput(inputId = "yn", choices = c("Choose one" = "", choices))
-      updateSelectInput(inputId = "yp", choices = c("Choose one" = "", choices))
+      updateSelectInput(inputId = "yn", choices = c("Choose column" = "", choices))
+      updateSelectInput(inputId = "yp", choices = c("Choose column" = "", choices))
     }
   })
 
