@@ -101,9 +101,12 @@ ui <- fluidPage(
 
   fluidRow(column(9, plotOutput("scatter", click = "plot_click", hover = "plot_hover", brush = "plot_brush")),
            column(3, tableOutput("nT_hover"))),
+  
+  verbatimTextOutput(outputId='ggplot_warnings'),
 
   fluidRow(column(4, downloadButton("dl_plot", "Save plot as pdf")),
            column(4, downloadButton("dl_genes", "Save selected genes"))),
+  tags$br()
 
 )
 
@@ -286,7 +289,8 @@ server <- function(input, output, session) {
       geom_point(aes(x=LFC, y=Score, color = Gp), shape = 16, size = 3) +
       scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols) +
       geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Gp=="Main", '', ID)), 
-                      min.segment.length = 0, size = 3, max.overlaps = 15) +
+                      min.segment.length = 0, size = 3, max.overlaps = 5,
+                      nudge_x = -0.2, direction = "y", hjust = "right") +
       theme(panel.background = element_rect(fill = "white"), 
             panel.border = element_blank(), axis.line = element_line()) +
       labs(y = input$ylab, x = input$xlab)
@@ -301,6 +305,22 @@ server <- function(input, output, session) {
   
   output$scatter <- renderPlot({
     make_scatter()
+  })
+  
+  dataerrors <- reactive({
+    tryCatch({
+      print(make_scatter())
+    }, message = function(e) {
+      return(e$message)
+    }, warning = function(e) {
+      return(e$message)
+    }, error = function(e) {
+      return(e$message)
+    })
+  })
+  
+  output$ggplot_warnings <- renderPrint({
+    dataerrors()
   })
   
   #------------------------------------------------
