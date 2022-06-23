@@ -1,6 +1,7 @@
 ## Libraries and Environment ---- 
 
 library(shiny)
+library(shinyBS)
 library(purrr)
 library(ggplot2)
 library(ggrepel)
@@ -72,11 +73,14 @@ ui <- fluidPage(
   #Sidebar Panel for data inputs & customization, Main Panel for plot
   sidebarLayout(
     sidebarPanel(
+      
       #Source data
       fileInput("txt_data", "Supply tab delimited .txt file", width = "100%"),
       #Option to preview data two ways
-      fluidRow(column(6,checkboxInput("preview", "Show preview of data")),
-               column(6,checkboxInput("summary", "Show summary of data"))),
+      checkboxInput("preview", "Show preview of data"),
+      checkboxInput("summary", "Show summary of data"),
+      #fluidRow(column(6,checkboxInput("preview", "Show preview of data")),
+       #        column(6,checkboxInput("summary", "Show summary of data"))),
       
       #Select data point labels
       selectInput("name", "Labels for data points", choices = NULL),

@@ -1,3 +1,4 @@
+library(shiny)
 ui <- navbarPage("Navbar page", id = "tabs",
                  tabPanel("Home",
                           actionButton("hideTab", "Hide 'Foo' tab"),
