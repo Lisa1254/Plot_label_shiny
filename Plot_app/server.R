@@ -206,17 +206,24 @@ server <- function(input, output, session) {
     #Construct on hitting the plot button
     input$plot
     
-    #Define genes to be highlighted
-    all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
-    all_genes_2 <- c(gene_sub2(), genes_in2(), selected2())
-    all_genes_3 <- c(gene_sub3(), genes_in3(), selected3())
+    
     
     #Set up plotting dataframe
     plot_gp_data <- plot_LFC_data()
     plot_gp_data$Gp <- rep_len("Main", nrow(plot_gp_data))
-    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_1, "Gp1", plot_gp_data$Gp)
-    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_2, "Gp2", plot_gp_data$Gp)
-    plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_3, "Gp3", plot_gp_data$Gp)
+    ##Define genes to be highlighted
+    if (input$num_gps  >= 1) {
+      all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
+      plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_1, "Gp1", plot_gp_data$Gp)
+    }
+    if (input$num_gps >=2) {
+      all_genes_2 <- c(gene_sub2(), genes_in2(), selected2())
+      plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_2, "Gp2", plot_gp_data$Gp)
+    }
+    if (input$num_gps == 3) {
+      all_genes_3 <- c(gene_sub3(), genes_in3(), selected3())
+      plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_3, "Gp3", plot_gp_data$Gp)
+    }
     plot_gp_data$Gp <- factor(plot_gp_data$Gp)
     
     #To get input genes plotted last, and therefore with the colour displaying when cluttered, organize those points to the bottom. For now, will just put all "Main" at the top, but consider adding feature to check for if input type is a gene list, as that gets priority to the bottom rather than a selection type
