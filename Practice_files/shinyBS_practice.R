@@ -64,7 +64,8 @@ ui <- fluidPage(
                                                   column(6, selectInput("yn", "Negative Score", choices = NULL)),
                                                   column(6, selectInput("yp", "Positive Score", choices = NULL))),
                                  textInput("ylab", "Attribute name for y values", placeholder = "e.g. Score (log10)"),
-                                 checkboxGroupInput("y_trans", "Transformations for y-axis:", c("log10", "reverse"))
+                                 checkboxGroupInput("y_trans", "Transformations for y-axis:", c("log10", "reverse")),
+                                 style = "info"
                                  ) #end Y attributes
                  ) #end collapseYs
       

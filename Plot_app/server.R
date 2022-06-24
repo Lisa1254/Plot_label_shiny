@@ -1,8 +1,84 @@
+## Libraries and Environment ---- 
+
+library(shiny)
+library(shinyBS)
+library(purrr)
+library(ggplot2)
+library(ggrepel)
+
+# Colour Choices and corresponding hex or R names
+col_hex <- setNames(c("lightgray", "#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"), 
+                    c("Light Gray", "Black", "Orange", "Sky Blue", "Bluish Green", "Yellow", "Blue", "Red", "Purple"))
+
+#Reusable conditional for Highlight Groups
+condPan01 <- function(number) {
+  conditionalPanel(paste0("input.num_gps >=", as.numeric(number)),
+                   bsCollapse(id = paste0("collapse_gp", number),
+                              bsCollapsePanel(paste0("Attributes for Highlight Group ", number),
+                                              textInput(paste0("gp", number), label = paste0("Group Name: ")),
+                                              selectInput(paste0("col", number), label = paste0("Colour for Group ", number),
+                                                          choices = col_hex),
+                                              radioButtons(paste0("type", number), label = paste0("Input Type for Group ", number), choices = c("Plot Interaction", "Specified Values", "Gene Input")),
+                                              conditionalPanel(paste0("input.type", number, " == `Specified Values`"),
+                                                               numericInput(paste0("minX", number), "X Value Minumum", value = 0),
+                                                               numericInput(paste0("maxX", number), "X Value Maximum", value = 0),
+                                                               numericInput(paste0("minY", number), "Y Value Minumum", value = 0),
+                                                               numericInput(paste0("maxY", number), "Y Value Maximum", value = 0)
+                                                               
+                                              ), #conditional panel for specified vales end
+                                              conditionalPanel(paste0("input.type", number, " == `Gene Input`"),
+                                                               textAreaInput(paste0("genes", number), "Genes list:", "", width="200px", height="240px")
+                                              ), #Conditional panel  for gene input end
+                                              style = "info"
+                              ) #End collapse panel
+                   ) #End bsCollapse
+                   
+                   
+                   
+                   
+  ) #end for group's conditional panel
+}
+
+#Apply conditional panel for 3 possible group inputs
+map_conds <- map(c(1,2,3), condPan01)
+
+#Function to parse gene list input 
+list_split <- function(in_var){
+  if(in_var == "") {return(NULL)}
+  
+  s <- unlist(strsplit(
+    unlist(strsplit(
+      unlist(strsplit(
+        unlist(strsplit(toupper(in_var), 
+                        c("[\n]"))),
+        c("[,]"))),
+      c("[:space:]"))),
+    c("\\s")))
+  s <- s[s != ""]
+  
+  return(s)
+}
+
+#Function to return genes within desired range
+subset_genes <- function(df, colx, minx, maxx, all_y, miny, maxy, vecN){
+  genes_ind <- which((all_y >= miny) & (all_y <= maxy) 
+                     & (df[,colx] >= minx) & (df[,colx] <= maxx))
+  genes_sub <- vecN[genes_ind]
+  return(genes_sub)
+}
+
 ## SERVER ----
+
+#New groups from collapsable UI:
+#bsCollapse: collapse_gp[123] with paste0("Attributes for Highlight Group ", number) as panel names (blue)
+#bsCollapse: collapseData with 
+#bsCollapse: collapseXs with panel name "Y-axis Attributes" (green)
+#bsCollapse: collapseYs with panel name "X-axis Attributes" (green)
+#bsCollapse: all_highlight with panel name "Gene highlight groups" (green)
 
 server <- function(input, output, session) {
   
-  #------------------------------------------------
+  #-----------------------Data-------------------------
   
   # Upload data and define parameters of scatter plot
   
@@ -73,11 +149,12 @@ server <- function(input, output, session) {
   })
   
   
-  #------------------------------------------------
+  #-----------------------Group Vars-------------------------
   
   # Set up graphical parameters for genes of interest, up to three groups
   
   all_labels <- reactive(c(input$gp1, input$gp2, input$gp3)[1:input$num_gps])
+  #plot_int_labels <- reactive()
   
   #Need to figure out how to better iterate or make a module/function for this
   observeEvent(input$gp1, {
@@ -85,6 +162,8 @@ server <- function(input, output, session) {
     updateRadioButtons(inputId = "current_gp", choices =all_labels(), inline = T)
     updateRadioButtons(inputId = "type1", label = paste0("Input Type for ", input$gp1))
   })
+  
+  
   observeEvent(input$gp2,{
     updateSelectInput(inputId = "col2", label = paste0("Colour for ", input$gp2))
     updateRadioButtons(inputId = "current_gp", choices =all_labels(), inline = T)
@@ -96,9 +175,10 @@ server <- function(input, output, session) {
     updateRadioButtons(inputId = "type3", label = paste0("Input Type for ", input$gp3))
   })
   
+  #If specific input list of genes:
   genes_in1 <- reactive({
     if (input$type1 == "Gene Input") {
-      list_split(input$genes1)
+      list_split(input$genes1)[which(list_split(input$genes1) %in% data_names())]
     } else {
       vector()
     }
@@ -106,7 +186,7 @@ server <- function(input, output, session) {
   
   genes_in2 <- reactive({
     if (input$type2 == "Gene Input") {
-      list_split(input$genes2)
+      list_split(input$genes2)[which(list_split(input$genes2) %in% data_names())]
     } else {
       vector()
     }
@@ -114,12 +194,13 @@ server <- function(input, output, session) {
   
   genes_in3 <- reactive({
     if (input$type3 == "Gene Input") {
-      list_split(input$genes3)
+      list_split(input$genes3)[which(list_split(input$genes3) %in% data_names())]
     } else {
       vector()
     }
   })
   
+  #If range values specified for genes
   gene_sub1 <- reactive({
     if (input$type1 == "Specified Values") {
       subset_genes(data(), input$x, input$minX1, input$maxX1, y_vals(), input$minY1, input$maxY1, data_names())
@@ -144,7 +225,7 @@ server <- function(input, output, session) {
     }
   })
   
-  #------------------------------------------------
+  #-----------------------Scatter-------------------------
   
   # Construct scatter plot
   
@@ -211,7 +292,7 @@ server <- function(input, output, session) {
     dataerrors()
   })
   
-  #------------------------------------------------
+  #-----------------------Mouse Input-------------------------
   
   # Use mouse input to select points of interest
   
@@ -284,7 +365,7 @@ server <- function(input, output, session) {
     selected3(vector())
   })
   
-  #------------------------------------------------
+  #-----------------------Download-------------------------
   
   # Download plot and gene data
   
@@ -300,42 +381,73 @@ server <- function(input, output, session) {
   
   
   #Download selected genes
-  
-  output$dl_genes <- downloadHandler(
-    filename = "selectedGenes.txt",
-    content = function(file) {
-      #Define genes to be highlighted
-      all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
-      all_genes_1_ind <- which(data_names() %in% all_genes_1)
-      dl_gene_df <- data.frame(Gene = all_genes_1, 
-                               Xval = data()[all_genes_1_ind,input$x],
-                               Yval = y_vals()[all_genes_1_ind],
-                               Group = rep(input$gp1, length(all_genes_1)))
+  output$test_df <- renderPrint({
+    req(input$dl_genes)
+    all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
+    all_genes_1_ind <- which(data_names() %in% all_genes_1)
+    dl_gene_df <- data.frame(Gene = all_genes_1, 
+                             Xval = data()[all_genes_1_ind,input$x],
+                             Yval = y_vals()[all_genes_1_ind],
+                             Group = rep(input$gp1, length(all_genes_1)))
+    
+    if (input$num_gps >= 2) {
+      all_genes_2 <- c(gene_sub2(), genes_in2(), selected2())
+      all_genes_2_ind <- which(data_names() %in% all_genes_2)
+      dl_gene_df2 <- data.frame(Gene = all_genes_2, 
+                                Xval = data()[all_genes_2_ind,input$x],
+                                Yval = y_vals()[all_genes_2_ind],
+                                Group = rep(input$gp2, length(all_genes_2)))
+      dl_gene_df <- rbind(dl_gene_df, dl_gene_df2)
       
-      if (input$num_gps >= 2) {
-        all_genes_2 <- c(gene_sub2(), genes_in2(), selected2())
-        all_genes_2_ind <- which(data_names() %in% all_genes_2)
-        dl_gene_df2 <- data.frame(Gene = all_genes_2, 
-                                  Xval = data()[all_genes_2_ind,input$x],
-                                  Yval = y_vals()[all_genes_2_ind],
-                                  Group = rep(input$gp2, length(all_genes_2)))
-        dl_gene_df <- rbind(dl_gene_df, dl_gene_df2)
-        
-      }
-      if (input$num_gps == 3) {
-        all_genes_3 <- c(gene_sub3(), genes_in3(), selected3())
-        all_genes_3_ind <- which(data_names() %in% all_genes_3)
-        dl_gene_df3 <- data.frame(Gene = all_genes_3, 
-                                  Xval = data()[all_genes_3_ind,input$x],
-                                  Yval = y_vals()[all_genes_3_ind],
-                                  Group = rep(input$gp3, length(all_genes_3)))
-        dl_gene_df <- rbind(dl_gene_df, dl_gene_df3)
-        
-      }
-      colnames(dl_gene_df)[c(2,3)] <- c(input$xlab, input$ylab)
-      write.table(dl_gene_df, file, row.names = F, quote = F)
     }
-  )
+    if (input$num_gps == 3) {
+      all_genes_3 <- c(gene_sub3(), genes_in3(), selected3())
+      all_genes_3_ind <- which(data_names() %in% all_genes_3)
+      dl_gene_df3 <- data.frame(Gene = all_genes_3, 
+                                Xval = data()[all_genes_3_ind,input$x],
+                                Yval = y_vals()[all_genes_3_ind],
+                                Group = rep(input$gp3, length(all_genes_3)))
+      dl_gene_df <- rbind(dl_gene_df, dl_gene_df3)
+      
+    }
+    colnames(dl_gene_df)[c(2,3)] <- c(input$xlab, input$ylab)
+    dl_gene_df
+  })
+  #output$dl_genes <- downloadHandler(
+  #  filename = "selectedGenes.txt",
+  #  content = function(file) {
+      #Define genes to be highlighted
+  #    all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
+  #    all_genes_1_ind <- which(data_names() %in% all_genes_1)
+  #    dl_gene_df <- data.frame(Gene = all_genes_1, 
+  #                             Xval = data()[all_genes_1_ind,input$x],
+  #                             Yval = y_vals()[all_genes_1_ind],
+  #                             Group = rep(input$gp1, length(all_genes_1)))
+      
+  #    if (input$num_gps >= 2) {
+  #      all_genes_2 <- c(gene_sub2(), genes_in2(), selected2())
+  #      all_genes_2_ind <- which(data_names() %in% all_genes_2)
+  #      dl_gene_df2 <- data.frame(Gene = all_genes_2, 
+  #                                Xval = data()[all_genes_2_ind,input$x],
+  #                                Yval = y_vals()[all_genes_2_ind],
+  #                                Group = rep(input$gp2, length(all_genes_2)))
+  #      dl_gene_df <- rbind(dl_gene_df, dl_gene_df2)
+        
+  #    }
+  #    if (input$num_gps == 3) {
+  #      all_genes_3 <- c(gene_sub3(), genes_in3(), selected3())
+  #      all_genes_3_ind <- which(data_names() %in% all_genes_3)
+  #      dl_gene_df3 <- data.frame(Gene = all_genes_3, 
+  #                                Xval = data()[all_genes_3_ind,input$x],
+  #                                Yval = y_vals()[all_genes_3_ind],
+  #                                Group = rep(input$gp3, length(all_genes_3)))
+  #      dl_gene_df <- rbind(dl_gene_df, dl_gene_df3)
+        
+  #    }
+  #    colnames(dl_gene_df)[c(2,3)] <- c(input$xlab, input$ylab)
+  #    write.table(dl_gene_df, file, row.names = F, quote = F)
+  #  }
+  #)
   
   
 }
