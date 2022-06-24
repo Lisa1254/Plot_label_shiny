@@ -15,7 +15,7 @@ condPan01 <- function(number) {
   conditionalPanel(paste0("input.num_gps >=", as.numeric(number)),
                    bsCollapse(id = paste0("collapse_gp", number),
                               bsCollapsePanel(paste0("Attributes for Highlight Group ", number),
-                                              textInput(paste0("gp", number), label = paste0("Group Name: ")),
+                                              textInput(paste0("gp", number), label = "Group Name:"),
                                               selectInput(paste0("col", number), label = paste0("Colour for Group ", number),
                                                           choices = col_hex, selected = col_hex[as.numeric(number)+1]),
                                               radioButtons(paste0("type", number), label = paste0("Input Type for Group ", number), choices = c("Plot Interaction", "Specified Values", "Gene Input")),

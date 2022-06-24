@@ -417,10 +417,51 @@ server <- function(input, output, session) {
         
       }
       colnames(dl_gene_df)[c(2,3)] <- c(input$xlab, input$ylab)
-      write.table(dl_gene_df, file, row.names = F, quote = F)
+      write.table(dl_gene_df, file, row.names = F, quote = F, sep = "\t")
     }
   )
   
+  #-----------------------Help-------------------------
+  
+  output$help <- renderUI({
+    HTML("<b>Source Data:</b><br/>
+               Input should be a tab delimited .txt file that includes data to be used in construction of scatterplot.<br/>
+               <br/><i> Need to add here description of preview and summary</i><br/>
+               <br/>
+               <b>Data Attributes:</b><br/>
+               Labels for data points can be extracted from either rownames of the imported data, or a specific column. Default colour for points is light gray.<br/>
+               <br/>
+               <b>X-axis Attributes:</b><br/>
+               <b><i>X values:</i></b> Select a column from uploaded data to provide values for X-axis<br/>
+               <b><i>Attribute name for X values:</i></b> Default name is column name selected for values. This name will be used as the plot's x-axis label, as well as for column header when saving information about selected genes.<br/>
+               <br/>
+               <b>Y-axis Attributes:</b><br/>
+               <i><b>Number of Inputs for Y-axis:</i></b> Can input single column, or two. Two column input is set up for input from MAGeCK analysis, such that the \"Score\" for the y-value is the negative score if  X-value < 0, or the positive score if X-value > 0.<br/>
+               <i><b>Y values:</i></b> If 1 column is selected for number of y-inputs, choose data column here.<br/>
+               <i><b>Negative Score:</i></b> If 2 column input is selected for y-values, these values will be used for the case when X-value < 0<br/>
+               <i><b>Positive Score:</i></b> If 2 column input is selected for y-values, these values will be used for the case when X-value > 0<br/>
+               <i><b>Attribute name for y values:</i></b> Default name is column name when 1 column input is selected for y-values, or \"MAGeCK Score\" when 2 column input is selected for y-values. This name will be used as the plot's x-axis label, as well as for column header when saving information about selected genes.<br/>
+               <i><b>Transformations for y-axis:</i></b> Values for y-axis can be log transformed, reversed, or both.<br/>
+               <br/>
+               <b>Gene highlight groups:</b><br/>
+               <i><b>How many highlighted groups?:</i></b><br/>
+               <i><b>Group Name:</i></b><br/>
+               <i><b>Colour for Group:</i></b><br/>
+               <i><b>Input Type for Group</i></b><br/>
+               <i>Reset gene selection</i><br/>
+               <i>Specified Values:</i><br/>
+               <i>Genes list:</i><br/>
+               <br/>
+               <b>Construct Plot:</b><br/>
+               <br/>
+               <b>Current Group:</b><br/>
+               <br/><i>Add stuff about plot clicking, brush, and hover</i><br/>
+               <br/><i>Add ggplot warnings for unlabelled points</i><br/>
+               <br/>
+               <b>Save plot as pdf:</b><br/>
+               <b>Save selected genes:<b><br/>
+         ")
+  })
   
 }
 
