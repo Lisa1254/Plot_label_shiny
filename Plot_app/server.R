@@ -211,20 +211,27 @@ shinyServer(function(input, output, session) {
     #Set up plotting dataframe
     plot_gp_data <- plot_data()
     plot_gp_data$Gp <- rep_len("Main", nrow(plot_gp_data))
+    plot_gp_data$Mult <- rep_len(0, nrow(plot_gp_data))
     ##Define genes to be highlighted
     if (input$num_gps  >= 1) {
       all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_1, "Gp1", plot_gp_data$Gp)
+      plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_1, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
     if (input$num_gps >=2) {
       all_genes_2 <- c(gene_sub2(), genes_in2(), selected2())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_2, "Gp2", plot_gp_data$Gp)
+      plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_2, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
     if (input$num_gps == 3) {
       all_genes_3 <- c(gene_sub3(), genes_in3(), selected3())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_3, "Gp3", plot_gp_data$Gp)
+      plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_3, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
+    
     plot_gp_data$Gp <- factor(plot_gp_data$Gp)
+    plot_gp_data[which(plot_gp_data$Mult == 1),"Mult"] <- 0
+    plot_gp_data$Mult <- factor(plot_gp_data$Mult)
     
     #To get input genes plotted last, and therefore with the colour displaying when cluttered, organize those points to the bottom. For now, will just put all "Main" at the top, but consider adding feature to check for if input type is a gene list, as that gets priority to the bottom rather than a selection type
     ind_mains <- which(plot_gp_data$Gp == "Main")
@@ -242,12 +249,20 @@ shinyServer(function(input, output, session) {
         
     } else {
       g <- ggplot(data=plot_gp_data_ord) +
-        geom_point(aes(x=X_Value, y=Y_Value, color = Gp), shape = 16, size = 3) +
+        geom_point(aes(x=X_Value, y=Y_Value, color = Gp, shape = Mult), size = 3) +
         scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols) +
         geom_text_repel(aes(x=X_Value, y=Y_Value, label=ifelse(Gp=="Main", '', ID)), 
                         min.segment.length = 0, size = 3, max.overlaps = 15)
 
     }
+    
+    if ((input$num_gps != 0) & (max(as.numeric(plot_gp_data$Mult)) == 1)) {
+      g <- g + scale_shape_manual(values = c(16), guide = "none")
+    } else if (max(as.numeric(plot_gp_data$Mult)) == 2) {
+      g <- g + scale_shape_manual(name = "Number of groups", labels = c("0-1 groups", "2 groups"), values = c(16,17))
+    } else if (max(as.numeric(plot_gp_data$Mult)) == 3) {
+      g <- g + scale_shape_manual(name = "Number of groups", labels = c("0-1 groups", "2 groups", "3 groups"), values = c(16,17,15))
+    } 
     
     #Add common elements to plot types with or without coloured points
     g <- g +
@@ -483,6 +498,9 @@ shinyServer(function(input, output, session) {
                <br/>
          ")
   })
+  
+  #-----------------------Testing Section-------------
+  
   
 })
 
