@@ -474,7 +474,7 @@ shinyServer(function(input, output, session) {
                <br/>
                <b>Save</b><br/>
                <i><b>Save plot as pdf:</b></i> Save image of figure as constructed.<br/>
-               <i><b>Save selected genes:</b></i> All selected genes will be saved as a table with tab separated values. Table will include gene ID, X value, Y value (original, not log10 transformed), and group.<br/>
+               <i><b>Save selected genes:</b></i> All selected genes will be saved as a table with tab separated values. Table will include gene ID, X value, Y value (original, not log10 transformed), and group. Option to order saved table by name, group, x-value, or y-value. <br/>
                <br/>
          ")
   })
