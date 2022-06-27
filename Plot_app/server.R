@@ -79,16 +79,16 @@ server <- function(input, output, session) {
   })
   
   #Construct basic dataframe for plotting
-  plot_LFC_data <- reactive({
+  plot_data <- reactive({
     req(input$plot)
     if ("log10" %in% input$y_trans){
       data.frame(ID = data_names(), 
-                 LFC = data()[,input$x],
-                 Score = log10(y_vals()))
+                 X_Value = data()[,input$x],
+                 Y_Value = log10(y_vals()))
     } else {
       data.frame(ID = data_names(), 
-                 LFC = data()[,input$x],
-                 Score = y_vals())
+                 X_Value = data()[,input$x],
+                 Y_Value = y_vals())
     }
     
   })
@@ -209,7 +209,7 @@ server <- function(input, output, session) {
     
     
     #Set up plotting dataframe
-    plot_gp_data <- plot_LFC_data()
+    plot_gp_data <- plot_data()
     plot_gp_data$Gp <- rep_len("Main", nrow(plot_gp_data))
     ##Define genes to be highlighted
     if (input$num_gps  >= 1) {
@@ -237,14 +237,14 @@ server <- function(input, output, session) {
     #Set up scatter plot with or without colour for input groups
     if (input$num_gps == 0){
       g <- ggplot(data=plot_gp_data_ord) +
-        geom_point(aes(x=LFC, y=Score), shape = 16, size = 3, color = input$col_m) +
+        geom_point(aes(x=X_Value, y=Y_Value), shape = 16, size = 3, color = input$col_m) +
         theme(legend.position = "none")
         
     } else {
       g <- ggplot(data=plot_gp_data_ord) +
-        geom_point(aes(x=LFC, y=Score, color = Gp), shape = 16, size = 3) +
+        geom_point(aes(x=X_Value, y=Y_Value, color = Gp), shape = 16, size = 3) +
         scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols) +
-        geom_text_repel(aes(x=LFC, y=Score, label=ifelse(Gp=="Main", '', ID)), 
+        geom_text_repel(aes(x=X_Value, y=Y_Value, label=ifelse(Gp=="Main", '', ID)), 
                         min.segment.length = 0, size = 3, max.overlaps = 15)
 
     }
@@ -291,7 +291,7 @@ server <- function(input, output, session) {
   #On mouse hover, display Near Point data
   nearTable_h <- reactive({
     req(input$plot_hover)
-    nearPoints(plot_LFC_data(), input$plot_hover)
+    nearPoints(plot_data(), input$plot_hover)
   })
   
   output$nT_hover <- renderTable(nearTable_h())
@@ -301,11 +301,11 @@ server <- function(input, output, session) {
   id_lab <- reactive({
     req(input$plot_click)
     if ((input$current_gp == input$gp1) & (input$type1 == "Plot Interaction")) {
-      nearPoints(plot_LFC_data(), input$plot_click)[,1]
+      nearPoints(plot_data(), input$plot_click)[,1]
     } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Interaction")) {
-      nearPoints(plot_LFC_data(), input$plot_click)[,1]
+      nearPoints(plot_data(), input$plot_click)[,1]
     } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Interaction")) {
-      nearPoints(plot_LFC_data(), input$plot_click)[,1]
+      nearPoints(plot_data(), input$plot_click)[,1]
     } 
     
   })
@@ -333,11 +333,11 @@ server <- function(input, output, session) {
   brush_sel <- reactive({
     req(input$plot_brush)
     if ((input$current_gp == input$gp1) & (input$type1 == "Plot Interaction")) {
-      brushedPoints(plot_LFC_data(), input$plot_brush)[,1]
+      brushedPoints(plot_data(), input$plot_brush)[,1]
     } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Interaction")) {
-      brushedPoints(plot_LFC_data(), input$plot_brush)[,1]
+      brushedPoints(plot_data(), input$plot_brush)[,1]
     } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Interaction")) {
-      brushedPoints(plot_LFC_data(), input$plot_brush)[,1]
+      brushedPoints(plot_data(), input$plot_brush)[,1]
     }
     
   })
@@ -424,9 +424,11 @@ server <- function(input, output, session) {
   #-----------------------Help-------------------------
   
   output$help <- renderUI({
-    HTML("<b>Source Data:</b><br/>
+    HTML(" This Shiny application makes a scatterplot from the X & Y values as supplied in a data table uploaded in a tab delimited .txt format. Application currently supports three different groups of highlighting labels with accepted input for gene choice for each group including plot interaction, range of spcified values, or input gene list.<br/><br/>
+              <b>Source Data:</b><br/>
                Input should be a tab delimited .txt file that includes data to be used in construction of scatterplot.<br/>
-               <br/><i> Need to add here description of preview and summary</i><br/>
+               <i>Show preview of data:</i> First six rows of data are displayed. This feature can help ensure that the correct file was selected and has uploaded correctly, and which column header is being used for which attribute.<br/>
+               <i>Show summary of data:</i> Shows R-console output of summary command: this includes quartiles and mean for numeric inputs. This can be useful in seeing the distribution of data and helping decide cutoff values for adding colour highlight to a specific range of input values.<br/>
                <br/>
                <b>Data Attributes:</b><br/>
                Labels for data points can be extracted from either rownames of the imported data, or a specific column. Default colour for points is light gray.<br/>
@@ -436,7 +438,7 @@ server <- function(input, output, session) {
                <b><i>Attribute name for X values:</i></b> Default name is column name selected for values. This name will be used as the plot's x-axis label, as well as for column header when saving information about selected genes.<br/>
                <br/>
                <b>Y-axis Attributes:</b><br/>
-               <i><b>Number of Inputs for Y-axis:</i></b> Can input single column, or two. Two column input is set up for input from MAGeCK analysis, such that the \"Score\" for the y-value is the negative score if  X-value < 0, or the positive score if X-value > 0.<br/>
+               <i><b>Number of Inputs for Y-axis:</i></b> Can input single column, or two. Two column input is set up for input from MAGeCK analysis, such that the \"Score\" for the y-value is the negative score if  X-value < 0, or the positive score if X-value > 0. If your data requires a different manipulation, it is recommended to perform the transformations externally prior to importing the values to the Shiny.<br/>
                <i><b>Y values:</i></b> If 1 column is selected for number of y-inputs, choose data column here.<br/>
                <i><b>Negative Score:</i></b> If 2 column input is selected for y-values, these values will be used for the case when X-value < 0<br/>
                <i><b>Positive Score:</i></b> If 2 column input is selected for y-values, these values will be used for the case when X-value > 0<br/>
@@ -444,22 +446,27 @@ server <- function(input, output, session) {
                <i><b>Transformations for y-axis:</i></b> Values for y-axis can be log transformed, reversed, or both.<br/>
                <br/>
                <b>Gene highlight groups:</b><br/>
-               <i><b>How many highlighted groups?:</i></b><br/>
-               <i><b>Group Name:</i></b><br/>
-               <i><b>Colour for Group:</i></b><br/>
-               <i><b>Input Type for Group</i></b><br/>
-               <i>Reset gene selection</i><br/>
-               <i>Specified Values:</i><br/>
-               <i>Genes list:</i><br/>
+               <i><b>How many highlighted groups?:</i></b> Currently app functionality supports up to 3 groups of gene selection for highlighting on the plot. Currently, if a gene belongs to more than one group, only the colour of the highest group number will be displayed, but both groups will be included in the download table of selected genes.<br/>
+               <i><b>Group Name:</i></b> Custom name input for each group to highlight in plot. The name supplied will be used as group identity on the plot legend as well as in the group variable column when downloading the selected gene list. <br/>
+               <i><b>Colour for Group:</i></b> Available colours represent the Wong colour palette that has been optimized for colour blind individuals. See <a href=\"https://www.nature.com/articles/nmeth.1618\">Points of view: Color blindness</a> <br/>
+               <i><b>Input Type for Group:</i></b> Options include<br/> 
+               <i>\"Plot Interaction\"</i> which allows users to click points on the figure to include in the group, or to select a group of points at the same time by holding the mouse click and dragging to expand. This type included a button to <i>Reset gene selection,</i> which will clear all points selected in the group by plot interaction.<br/>
+               <i>\"Specified Values\"</i> which provides input boxes for numeric values that describe maximum and minimum for each of X and Y values. If log10 transformation has been selected for Y-values, input into Y max/min does not take into account the transformation, and original data value should be used.<br/>
+               <i>\"Gene Input\"</i> which provides a text box to input genes desired to highlight on plot. Genes can be separated by a comma, space, or newline characater. If a gene is not recognized as being in the set of plotted datapoints, it will be ignored.<br/>
                <br/>
                <b>Construct Plot:</b><br/>
+               Figure will not be constructed until the button is clicked, but once constructed will respond to adjustments in real time. When hovering over datapoints on the plot, the associated point information will be displayed to the right of the plot. If log10 transformation has been selected, the Y-value displayed will reflect that transformation.
                <br/>
                <b>Current Group:</b><br/>
-               <br/><i>Add stuff about plot clicking, brush, and hover</i><br/>
-               <br/><i>Add ggplot warnings for unlabelled points</i><br/>
+               Groups will be identified by label provided by user. Although current app functionality will display all groups described, only groups with input type as \"Plot Interaction\" will allow selection by clicking points on the plot.<br/>
                <br/>
-               <b>Save plot as pdf:</b><br/>
-               <b>Save selected genes:<b><br/>
+               <b>Warnings</b><br/>
+               Below the plot, any warning from ggplot for unlabelled data points will be displayed here. Any points that are not labelled on the plot for having too many overlaps with other data points will still be saved within the selected gene lists for download.<br/>
+               <br/>
+               <b>Save</b><br/>
+               <i><b>Save plot as pdf:</b></i> Save image of figure as constructed.<br/>
+               <i><b>Save selected genes:</b></i> All selected genes will be saved as a table with tab separated values. Table will include gene ID, X value, Y value (original, not log10 transformed), and group.<br/>
+               <br/>
          ")
   })
   

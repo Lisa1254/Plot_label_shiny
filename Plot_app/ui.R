@@ -81,7 +81,7 @@ ui <- navbarPage("Custom Scatterplots", id = "tabs",
                        (input.type1 == `Plot Interaction` | input.type2 == `Plot Interaction` | input.type3 == `Plot Interaction`)",
                                                radioButtons("current_gp", "Current group for labelling", 
                                                             choices = "none", inline = T)),
-                              fluidRow(column(9, plotOutput("scatter", click = "plot_click", hover = "plot_hover", brush = "plot_brush")),
+                              fluidRow(column(8, plotOutput("scatter", click = "plot_click", hover = "plot_hover", brush = "plot_brush")),
                                        column(3, tableOutput("nT_hover"))),
                               
                               #Display warnings for unlabelled points
