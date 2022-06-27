@@ -7,8 +7,8 @@ library(ggplot2)
 library(ggrepel)
 
 # Colour Choices and corresponding hex or R names
-col_hex <- setNames(c("lightgray", "#56B4E9", "#E69F00", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", "#000000"), 
-                    c("Light Gray", "Sky Blue", "Orange", "Bluish Green", "Yellow", "Blue", "Red", "Purple", "Black"))
+col_hex <- setNames(c("lightgray", "#56B4E9", "#E69F00", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"), 
+                    c("Light Gray", "Sky Blue", "Orange", "Bluish Green", "Yellow", "Blue", "Red", "Purple"))
 
 #Reusable conditional for Highlight Groups
 condPan01 <- function(number) {
