@@ -475,13 +475,13 @@ shinyServer(function(input, output, session) {
                <i><b>Transformations for y-axis:</i></b> Values for y-axis can be log transformed, reversed, or both.<br/>
                <br/>
                <b>Gene highlight groups:</b><br/>
-               <i><b>How many highlighted groups?:</i></b> Currently app functionality supports up to 3 groups of gene selection for highlighting on the plot. Currently, if a gene belongs to more than one group, only the colour of the highest group number will be displayed, but both groups will be included in the download table of selected genes.<br/>
+               <i><b>How many highlighted groups?:</i></b> Currently app functionality supports up to 3 groups of gene selection for highlighting on the plot. Currently, if a gene belongs to more than one group, only the colour of the highest group number will be displayed, but both groups will be included in the download table of selected genes. The shape of the point will change if a gene belongs to more than one group.<br/>
                <i><b>Group Name:</i></b> Custom name input for each group to highlight in plot. The name supplied will be used as group identity on the plot legend as well as in the group variable column when downloading the selected gene list. <br/>
                <i><b>Colour for Group:</i></b> Available colours represent the Wong colour palette that has been optimized for colour blind individuals. See <a href=\"https://www.nature.com/articles/nmeth.1618\">Points of view: Color blindness</a> <br/>
-               <i><b>Input Type for Group:</i></b> Options include<br/> 
-               <i>\"Plot Click\"</i> which allows users to click points on the figure to include in the group, or to select a group of points at the same time by holding the mouse click and dragging to expand. This type includes a button to <i>Reset gene selection,</i> which will clear all points selected in the group by clicking the plot.<br/>
-               <i>\"Specified Values\"</i> which provides input boxes for numeric values that describe maximum and minimum for each of X and Y values. If log10 transformation has been selected for Y-values, input into Y max/min does not take into account the transformation, and original data value should be used.<br/>
-               <i>\"Gene Input\"</i> which provides a text box to input genes desired to highlight on plot. Genes can be separated by a comma, space, or newline characater. If a gene is not recognized as being in the set of plotted datapoints, it will be ignored.<br/>
+               <i><b>Input Type for Group:</i></b> Options include:<br/> 
+               &emsp;<i>\"Plot Click\"</i> which allows users to click points on the figure to include in the group, or to select a group of points at the same time by holding the mouse click and dragging to expand. This type includes a button to <i>Reset gene selection,</i> which will clear all points selected in the group by clicking the plot.<br/>
+               &emsp;<i>\"Specified Values\"</i> which provides input boxes for numeric values that describe maximum and minimum for each of X and Y values. If log10 transformation has been selected for Y-values, input into Y max/min does not take into account the transformation, and original data value should be used.<br/>
+               &emsp;<i>\"Gene Input\"</i> which provides a text box to input genes desired to highlight on plot. Genes can be separated by a comma, space, or newline characater. If a gene is not recognized as being in the set of plotted datapoints, it will be ignored.<br/>
                <br/>
                <b>Construct Plot:</b><br/>
                Figure will not be constructed until the button is clicked, but once constructed will respond to adjustments in real time. When hovering over datapoints on the plot, the associated point information will be displayed to the right of the plot. If log10 transformation has been selected, the Y-value displayed will reflect that transformation.
@@ -493,8 +493,8 @@ shinyServer(function(input, output, session) {
                Below the plot, any warning from ggplot for unlabelled data points will be displayed here. Any points that are not labelled on the plot for having too many overlaps with other data points will still be saved within the selected gene lists for download.<br/>
                <br/>
                <b>Save</b><br/>
-               <i><b>Save plot as pdf:</b></i> Save image of figure as constructed.<br/>
-               <i><b>Save selected genes:</b></i> All selected genes will be saved as a table with tab separated values. Table will include gene ID, X value, Y value (original, not log10 transformed), and group. Option to order saved table by name, group, x-value, or y-value. <br/>
+               <i><b>Save plot:</b></i> Save pdf image of figure as constructed.<br/>
+               <i><b>Save genes:</b></i> All selected genes will be saved as a table with tab separated values. Table will include gene ID, X value, Y value (original, not log10 transformed), and group. Option to order saved table by name, group, x-value, or y-value. <br/>
                <br/>
          ")
   })
