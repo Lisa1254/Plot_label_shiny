@@ -102,7 +102,7 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                  ), #end Plot tab
                  
                  tabPanel("Help", 
-                          titlePanel("Help"),
+                          titlePanel("Help Documentation"),
                           htmlOutput("help"))
   
 ) #end navbar Page

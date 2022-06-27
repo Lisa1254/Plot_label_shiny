@@ -433,7 +433,12 @@ shinyServer(function(input, output, session) {
   #-----------------------Help-------------------------
   
   output$help <- renderUI({
-    HTML(" This Shiny application makes a scatterplot from the X & Y values as supplied in a data table uploaded in a tab delimited .txt format. Application currently supports three different groups of highlighting labels with accepted input for gene choice for each group including plot interaction (click or drag select), range of spcified values, or input gene list.<br/><br/>
+    HTML(" This Shiny application makes a scatterplot from the X & Y values as supplied in a data table uploaded in a tab delimited .txt format. Application currently supports three different groups of highlighting labels with accepted input for gene choice for each group including plot interaction (click or drag select), range of spcified values, or input gene list.<br/>
+    <br/>
+    <br/>
+    <p style=\"background-color:powderblue;\">
+    <b>NOTE:</b> This Shiny is still in progress, but should be functional for most purposes. Please see associated <a href=\"https://github.com/Lisa1254/Plot_label_shiny\"> GitHub</a> for current issues being worked on, or to submit a feature request.
+    </p><br/>
               <b>Source Data:</b><br/>
                Input should be a tab delimited .txt file that includes data to be used in construction of scatterplot.<br/>
                <i>Show preview of data:</i> First six rows of data are displayed. This feature can help ensure that the correct file was selected and has uploaded correctly, and which column header is being used for which attribute.<br/>
