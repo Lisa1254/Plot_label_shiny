@@ -100,13 +100,13 @@ shinyServer(function(input, output, session) {
   all_labels <- reactive(c(input$gp1, input$gp2, input$gp3)[1:input$num_gps])
   #all_labels <- reactive({
   #  disp_labs <- vector()
-  #  if (input$type1 == "Plot Interaction") {
+  #  if (input$type1 == "Plot Click") {
   #    disp_labs <- c(disp_labs, input$gp1)
   #  }
-  #  if ((input$type2 == "Plot Interaction") ) { #& (input$num_gps >= 2)
+  #  if ((input$type2 == "Plot Click") ) { #& (input$num_gps >= 2)
   #    disp_labs <- c(disp_labs, input$gp2)
   #  }
-  #  if ((input$type3 == "Plot Interaction") ) { #& (input$num_gps == 3)
+  #  if ((input$type3 == "Plot Click") ) { #& (input$num_gps == 3)
   #    disp_labs <- c(disp_labs, input$gp3)
   #  }
   #  return(disp_labs)
@@ -211,20 +211,27 @@ shinyServer(function(input, output, session) {
     #Set up plotting dataframe
     plot_gp_data <- plot_data()
     plot_gp_data$Gp <- rep_len("Main", nrow(plot_gp_data))
+    plot_gp_data$Mult <- rep_len(0, nrow(plot_gp_data))
     ##Define genes to be highlighted
     if (input$num_gps  >= 1) {
       all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_1, "Gp1", plot_gp_data$Gp)
+      plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_1, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
     if (input$num_gps >=2) {
       all_genes_2 <- c(gene_sub2(), genes_in2(), selected2())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_2, "Gp2", plot_gp_data$Gp)
+      plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_2, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
     if (input$num_gps == 3) {
       all_genes_3 <- c(gene_sub3(), genes_in3(), selected3())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_3, "Gp3", plot_gp_data$Gp)
+      plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_3, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
+    
     plot_gp_data$Gp <- factor(plot_gp_data$Gp)
+    plot_gp_data[which(plot_gp_data$Mult == 1),"Mult"] <- 0
+    plot_gp_data$Mult <- factor(plot_gp_data$Mult)
     
     #To get input genes plotted last, and therefore with the colour displaying when cluttered, organize those points to the bottom. For now, will just put all "Main" at the top, but consider adding feature to check for if input type is a gene list, as that gets priority to the bottom rather than a selection type
     ind_mains <- which(plot_gp_data$Gp == "Main")
@@ -242,12 +249,20 @@ shinyServer(function(input, output, session) {
         
     } else {
       g <- ggplot(data=plot_gp_data_ord) +
-        geom_point(aes(x=X_Value, y=Y_Value, color = Gp), shape = 16, size = 3) +
+        geom_point(aes(x=X_Value, y=Y_Value, color = Gp, shape = Mult), size = 3) +
         scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols) +
         geom_text_repel(aes(x=X_Value, y=Y_Value, label=ifelse(Gp=="Main", '', ID)), 
                         min.segment.length = 0, size = 3, max.overlaps = 15)
 
     }
+    
+    if ((input$num_gps != 0) & (max(as.numeric(plot_gp_data$Mult)) == 1)) {
+      g <- g + scale_shape_manual(values = c(16), guide = "none")
+    } else if (max(as.numeric(plot_gp_data$Mult)) == 2) {
+      g <- g + scale_shape_manual(name = "Number of groups", labels = c("0-1 groups", "2 groups"), values = c(16,17))
+    } else if (max(as.numeric(plot_gp_data$Mult)) == 3) {
+      g <- g + scale_shape_manual(name = "Number of groups", labels = c("0-1 groups", "2 groups", "3 groups"), values = c(16,17,15))
+    } 
     
     #Add common elements to plot types with or without coloured points
     g <- g +
@@ -300,11 +315,11 @@ shinyServer(function(input, output, session) {
   
   id_lab <- reactive({
     req(input$plot_click)
-    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Interaction")) {
+    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Click")) {
       nearPoints(plot_data(), input$plot_click)[,1]
-    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Interaction")) {
+    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Click")) {
       nearPoints(plot_data(), input$plot_click)[,1]
-    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Interaction")) {
+    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Click")) {
       nearPoints(plot_data(), input$plot_click)[,1]
     } 
     
@@ -332,11 +347,11 @@ shinyServer(function(input, output, session) {
   #Add brushed points to selected
   brush_sel <- reactive({
     req(input$plot_brush)
-    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Interaction")) {
+    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Click")) {
       brushedPoints(plot_data(), input$plot_brush)[,1]
-    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Interaction")) {
+    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Click")) {
       brushedPoints(plot_data(), input$plot_brush)[,1]
-    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Interaction")) {
+    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Click")) {
       brushedPoints(plot_data(), input$plot_brush)[,1]
     }
     
@@ -433,7 +448,12 @@ shinyServer(function(input, output, session) {
   #-----------------------Help-------------------------
   
   output$help <- renderUI({
-    HTML(" This Shiny application makes a scatterplot from the X & Y values as supplied in a data table uploaded in a tab delimited .txt format. Application currently supports three different groups of highlighting labels with accepted input for gene choice for each group including plot interaction, range of spcified values, or input gene list.<br/><br/>
+    HTML(" This Shiny application makes a scatterplot from the X & Y values as supplied in a data table uploaded in a tab delimited .txt format. Application currently supports three different groups of highlighting labels with accepted input for gene choice for each group including plot interaction (click or drag select), range of spcified values, or input gene list.<br/>
+    <br/>
+    <br/>
+    <p style=\"background-color:powderblue;\">
+    <b>NOTE:</b> This Shiny is still in progress, but should be functional for most purposes. Please see associated <a href=\"https://github.com/Lisa1254/Plot_label_shiny\"> GitHub</a> for current issues being worked on, or to submit a feature request.
+    </p><br/>
               <b>Source Data:</b><br/>
                Input should be a tab delimited .txt file that includes data to be used in construction of scatterplot.<br/>
                <i>Show preview of data:</i> First six rows of data are displayed. This feature can help ensure that the correct file was selected and has uploaded correctly, and which column header is being used for which attribute.<br/>
@@ -459,7 +479,7 @@ shinyServer(function(input, output, session) {
                <i><b>Group Name:</i></b> Custom name input for each group to highlight in plot. The name supplied will be used as group identity on the plot legend as well as in the group variable column when downloading the selected gene list. <br/>
                <i><b>Colour for Group:</i></b> Available colours represent the Wong colour palette that has been optimized for colour blind individuals. See <a href=\"https://www.nature.com/articles/nmeth.1618\">Points of view: Color blindness</a> <br/>
                <i><b>Input Type for Group:</i></b> Options include<br/> 
-               <i>\"Plot Interaction\"</i> which allows users to click points on the figure to include in the group, or to select a group of points at the same time by holding the mouse click and dragging to expand. This type included a button to <i>Reset gene selection,</i> which will clear all points selected in the group by plot interaction.<br/>
+               <i>\"Plot Click\"</i> which allows users to click points on the figure to include in the group, or to select a group of points at the same time by holding the mouse click and dragging to expand. This type includes a button to <i>Reset gene selection,</i> which will clear all points selected in the group by clicking the plot.<br/>
                <i>\"Specified Values\"</i> which provides input boxes for numeric values that describe maximum and minimum for each of X and Y values. If log10 transformation has been selected for Y-values, input into Y max/min does not take into account the transformation, and original data value should be used.<br/>
                <i>\"Gene Input\"</i> which provides a text box to input genes desired to highlight on plot. Genes can be separated by a comma, space, or newline characater. If a gene is not recognized as being in the set of plotted datapoints, it will be ignored.<br/>
                <br/>
@@ -467,7 +487,7 @@ shinyServer(function(input, output, session) {
                Figure will not be constructed until the button is clicked, but once constructed will respond to adjustments in real time. When hovering over datapoints on the plot, the associated point information will be displayed to the right of the plot. If log10 transformation has been selected, the Y-value displayed will reflect that transformation.
                <br/>
                <b>Current Group:</b><br/>
-               Groups will be identified by label provided by user. Although current app functionality will display all groups described, only groups with input type as \"Plot Interaction\" will allow selection by clicking points on the plot.<br/>
+               Groups will be identified by label provided by user. Although current app functionality will display all groups described, only groups with input type as \"Plot Click\" will allow selection by clicking points on the plot.<br/>
                <br/>
                <b>Warnings</b><br/>
                Below the plot, any warning from ggplot for unlabelled data points will be displayed here. Any points that are not labelled on the plot for having too many overlaps with other data points will still be saved within the selected gene lists for download.<br/>
@@ -478,6 +498,9 @@ shinyServer(function(input, output, session) {
                <br/>
          ")
   })
+  
+  #-----------------------Testing Section-------------
+  
   
 })
 
