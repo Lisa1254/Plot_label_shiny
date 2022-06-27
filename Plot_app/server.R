@@ -1,9 +1,9 @@
 source("env.R")
 
-## SERVER ----
 
 
-server <- function(input, output, session) {
+
+shinyServer(function(input, output, session) {
   
   #-----------------------Data-------------------------
   
@@ -374,7 +374,8 @@ server <- function(input, output, session) {
   
   #Download plot
   output$dl_plot <- downloadHandler(
-    filename = "plotImageScatter.pdf",
+    filename = function(){
+      paste0(input$dl_plot_name, ".pdf")},
     content = function(file) {
       ggsave(make_scatter(), 
              file = file, 
@@ -386,7 +387,8 @@ server <- function(input, output, session) {
   #Download selected genes
  
   output$dl_genes <- downloadHandler(
-    filename = "selectedGenes.txt",
+    filename = function(){
+      paste0(input$dl_genes_name, ".txt")},
     content = function(file) {
       #Define genes to be highlighted
       all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
@@ -415,6 +417,13 @@ server <- function(input, output, session) {
                                   Group = rep(input$gp3, length(all_genes_3)))
         dl_gene_df <- rbind(dl_gene_df, dl_gene_df3)
         
+      }
+      if (input$dl_genes_order == "Name") {
+        dl_gene_df <- dl_gene_df[order(dl_gene_df$Gene),]
+      } else if (input$dl_genes_order == "X-Value") {
+        dl_gene_df <- dl_gene_df[order(dl_gene_df$Xval),]
+      } else if (input$dl_genes_order == "Y-Value") {
+        dl_gene_df <- dl_gene_df[order(dl_gene_df$Yval),]
       }
       colnames(dl_gene_df)[c(2,3)] <- c(input$xlab, input$ylab)
       write.table(dl_gene_df, file, row.names = F, quote = F, sep = "\t")
@@ -470,5 +479,5 @@ server <- function(input, output, session) {
          ")
   })
   
-}
+})
 

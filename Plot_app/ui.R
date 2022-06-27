@@ -1,7 +1,7 @@
 source("env.R")
 
 ## UI ----
-ui <- navbarPage("Custom Scatterplots", id = "tabs",
+shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                  tabPanel("Plot",
                           #Title
                           titlePanel("Scatterplot with Custom Labels"),
@@ -88,17 +88,22 @@ ui <- navbarPage("Custom Scatterplots", id = "tabs",
                               verbatimTextOutput(outputId='ggplot_warnings'),
                               
                               #Download
-                              fluidRow(column(4, downloadButton("dl_plot", "Save plot as pdf")),
-                                       column(4, downloadButton("dl_genes", "Save selected genes"))),
+                              fluidRow(column(4, textInput("dl_plot_name", "Save plot image as...", value = "plotImageScatter")),
+                                       column(4, tags$br(), downloadButton("dl_plot", "Save plot (.pdf)", style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))),
+                              fluidRow(column(4, textInput("dl_genes_name", "Save selected genes as...", value = "selectedGenes")),
+                                       column(4, tags$br(), downloadButton("dl_genes", "Save genes (.txt)", style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"))
+                                       ),
+                              radioButtons("dl_genes_order", "Order genes table by...", choices = c("Name", "Group", "X-Value", "Y-Value"), inline = TRUE),
                               tags$br()
                               
                             ) #end MainPanel
                           ) #end sidebarLayout
                           
                  ), #end Plot tab
+                 
                  tabPanel("Help", 
                           titlePanel("Help"),
                           htmlOutput("help"))
   
+) #end navbar Page
 ) #end ui
-
