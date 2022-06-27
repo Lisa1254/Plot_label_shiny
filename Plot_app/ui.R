@@ -78,7 +78,7 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                               conditionalPanel(condition = "input.summary == true", verbatimTextOutput("summary_data")),
 
                               conditionalPanel("input.num_gps >=1 & 
-                       (input.type1 == `Plot Interaction` | input.type2 == `Plot Interaction` | input.type3 == `Plot Interaction`)",
+                       (input.type1 == `Plot Click` | input.type2 == `Plot Click` | input.type3 == `Plot Click`)",
                                                radioButtons("current_gp", "Current group for labelling", 
                                                             choices = "none", inline = T)),
                               fluidRow(column(8, plotOutput("scatter", click = "plot_click", hover = "plot_hover", brush = "plot_brush")),

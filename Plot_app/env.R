@@ -18,7 +18,7 @@ condPan01 <- function(number) {
                                               textInput(paste0("gp", number), label = "Group Name:"),
                                               selectInput(paste0("col", number), label = paste0("Colour for Group ", number),
                                                           choices = col_hex, selected = col_hex[as.numeric(number)+1]),
-                                              radioButtons(paste0("type", number), label = paste0("Input Type for Group ", number), choices = c("Plot Interaction", "Specified Values", "Gene Input")),
+                                              radioButtons(paste0("type", number), label = paste0("Input Type for Group ", number), choices = c("Plot Click", "Specified Values", "Gene Input")),
                                               conditionalPanel(paste0("input.type", number, " == `Specified Values`"),
                                                                textInput(paste0("minX", number), "X Value Minumum", value = 0),
                                                                textInput(paste0("maxX", number), "X Value Maximum", value = 0),
@@ -29,7 +29,7 @@ condPan01 <- function(number) {
                                               conditionalPanel(paste0("input.type", number, " == `Gene Input`"),
                                                                textAreaInput(paste0("genes", number), "Genes list:", "", width="200px", height="240px")
                                               ), #Conditional panel  for gene input end
-                                              conditionalPanel(paste0("input.type", number, "== `Plot Interaction`"),
+                                              conditionalPanel(paste0("input.type", number, "== `Plot Click`"),
                                                                actionButton(paste0("reset_interact", number), 
                                                                             paste0("Reset gene selection"),
                                                                             style = "color: #fff; background-color: #630101; border-color: #260000")),
