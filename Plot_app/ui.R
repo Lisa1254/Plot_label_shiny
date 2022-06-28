@@ -26,21 +26,12 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                                                          selectInput("name", "Labels for data points", choices = NULL),
                                                          #Colour data points
                                                          selectInput("col_m", "Main colour", choices = col_hex),
-                                                         style = "success") #end Data Attributes collapse panel
-                              ), #end collapseData bsCollapse
-                              
-                              
-                              #Select and label X-values
-                              bsCollapse(id = "collapseXs",
+                                                         style = "success"), #end Data Attributes collapse panel
                                          bsCollapsePanel("X-axis Attributes",
                                                          selectInput("x", "X values", choices = NULL),
                                                          textInput("xlab", "Attribute name for X values", placeholder = "e.g. LFC"),
                                                          style = "success"
-                                         ) #end X-axis attribtes collapse panel
-                              ), #end collapseXs bsCollapse
-                              
-                              #Select and label Y-values
-                              bsCollapse(id = "collapseYs",
+                                         ), #end X-axis attribtes collapse panel
                                          bsCollapsePanel("Y-axis Attributes",
                                                          radioButtons("num_y", "Number of Inputs for Y-axis", choices = c("1", "2"), inline = TRUE),
                                                          conditionalPanel(condition = "input.num_y == 1",
@@ -53,7 +44,8 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                                                          checkboxGroupInput("y_trans", "Transformations for y-axis:", c("log10", "reverse")),
                                                          style = "success"
                                          ) #end Y attributes
-                              ), #end collapseYs
+                              ), #end collapseData bsCollapse
+
                               
                               bsCollapse(id = "all_highlight",
                                          bsCollapsePanel("Gene highlight groups",
@@ -72,6 +64,7 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                             
                             #---------------------------MainPanel-------------------
                             mainPanel(
+                              textOutput("file_name"),
                               #If requested, show data preview - useful for helping choose which columns will be used for each axis, and verifying correct data was selected
                               conditionalPanel(condition = "input.preview == true", tableOutput("head_data")),
                               #If requested, show data summary - useful for seeing value ranges when selecting data highlight on plot

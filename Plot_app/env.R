@@ -1,4 +1,4 @@
-## Libraries and Environment ---- 
+# Libraries  ---- 
 
 library(shiny)
 library(shinyBS)
@@ -6,11 +6,13 @@ library(purrr)
 library(ggplot2)
 library(ggrepel)
 
-# Colour Choices and corresponding hex or R names
+#
+#Colour Choices ----
 col_hex <- setNames(c("lightgray", "#56B4E9", "#E69F00", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"), 
                     c("Light Gray", "Sky Blue", "Orange", "Bluish Green", "Yellow", "Blue", "Red", "Purple"))
 
-#Reusable conditional for Highlight Groups
+#
+#Reusable Conditional for Highlight Groups ----
 condPan01 <- function(number) {
   conditionalPanel(paste0("input.num_gps >=", as.numeric(number)),
                    bsCollapse(id = paste0("collapse_gp", number),
@@ -43,10 +45,12 @@ condPan01 <- function(number) {
   ) #end for group's conditional panel
 }
 
+
 #Apply conditional panel for 3 possible group inputs
 map_conds <- map(c(1,2,3), condPan01)
 
-#Function to parse gene list input 
+#
+#Function to parse gene list input ----
 list_split <- function(in_var){
   if(in_var == "") {return(NULL)}
   
@@ -63,10 +67,13 @@ list_split <- function(in_var){
   return(s)
 }
 
-#Function to return genes within desired range
+#
+#Function to return genes within desired range ----
 subset_genes <- function(df, colx, minx, maxx, all_y, miny, maxy, vecN){
   genes_ind <- which((all_y >= miny) & (all_y <= maxy) 
                      & (df[,colx] >= minx) & (df[,colx] <= maxx))
   genes_sub <- vecN[genes_ind]
   return(genes_sub)
 }
+
+#

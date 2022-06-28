@@ -12,9 +12,12 @@ shinyServer(function(input, output, session) {
   #Receive & verify data
   data <- reactive({
     req(input$txt_data)
-    read.delim(file =input$txt_data$datapath)
+    d <- read.delim(file =input$txt_data$datapath)
+    d <- d[complete.cases(d),]
+    return(d)
   })
   
+  output$file_name <- renderText(paste("Source data:", input$txt_data$name))
   output$head_data <- renderTable(head(data()), rownames = TRUE)
   output$summary_data <- renderPrint(summary(data()))
   
