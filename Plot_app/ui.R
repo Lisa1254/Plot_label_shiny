@@ -96,7 +96,18 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                  
                  tabPanel("Help", 
                           titlePanel("Help Documentation"),
-                          htmlOutput("help"))
+                          htmlOutput("help")),
+                 
+                 tabPanel("Example 1",
+                          titlePanel("Example for 2 Screen Comparison"),
+                          imageOutput("fdr_image"),
+                          htmlOutput("fdr_desc"),
+                          tableOutput("fdr_table")),
+                 tabPanel("Example 2",
+                          titlePanel("Example of Volcano Plot from MAGeCK Data"),
+                          imageOutput("volcano_image"),
+                          htmlOutput("volcano_desc"),
+                          tableOutput("volcano_table"))
   
 ) #end navbar Page
 ) #end ui
