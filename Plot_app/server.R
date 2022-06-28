@@ -562,8 +562,9 @@ shinyServer(function(input, output, session) {
     if (counter() < 7) {
       counter(counter() + 1)
     } else {
-      createAlert(session, "gp_alert", "exampleAlert", title = "Oops", content = "Maximum group number is seven", append = FALSE)
+      createAlert(session, "gp_alert", title = "Oops", content = "Maximum group number is seven", append = FALSE)
     }
+    updateSliderInput(inputId = "num_gps", value = counter())
   })
   output$cnt_gps <- renderPrint({
     cat("The number: ", as.character(counter()))
