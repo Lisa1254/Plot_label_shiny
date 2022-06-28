@@ -555,6 +555,19 @@ shinyServer(function(input, output, session) {
   #
   #-----------------------Testing Section-------------
   
+  #Using a button to add groups. Will have remove group within each group's section so they don't have to be removed in the same order.
+  counter <- reactiveVal(0)
+  
+  observeEvent(input$add_gp,{
+    if (counter() < 7) {
+      counter(counter() + 1)
+    } else {
+      createAlert(session, "gp_alert", "exampleAlert", title = "Oops", content = "Maximum group number is seven", append = FALSE)
+    }
+  })
+  output$cnt_gps <- renderPrint({
+    cat("The number: ", as.character(counter()))
+  })
   
 })
 

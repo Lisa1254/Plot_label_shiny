@@ -49,9 +49,12 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                               
                               bsCollapse(id = "all_highlight",
                                          bsCollapsePanel("Gene highlight groups",
+                                                         actionButton("add_gp", "Add highlight group", style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                                                         bsAlert("gp_alert"),
+                                                         verbatimTextOutput("cnt_gps"),
                                                          sliderInput("num_gps", "How many highlighted groups?", min=0, max=3, step=1, value=0),
                                                          map_conds,
-                                                         style = "success"
+                                                         style = "info"
                                          ) #end gene highlight groups collapse panel
                               ), #end all_highlight collapse panel
                               
