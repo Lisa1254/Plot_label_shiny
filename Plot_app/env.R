@@ -16,7 +16,7 @@ col_hex <- setNames(c("lightgray", "#56B4E9", "#E69F00", "#009E73", "#F0E442", "
 condPan01 <- function(number) {
   conditionalPanel(paste0("input.num_gps >=", as.numeric(number)),
                    bsCollapse(id = paste0("collapse_gp", number),
-                              bsCollapsePanel(paste0("Attributes for Highlight Group ", number),
+                              bsCollapsePanel(paste0("Group ", number, " Attributes"),
                                               checkboxInput(paste0("inc_gp", number), label="Include group in plot", value = TRUE),
                                               textInput(paste0("gp", number), label = "Group Name:"),
                                               selectInput(paste0("col", number), label = paste0("Colour for Group ", number),
