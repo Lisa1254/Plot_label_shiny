@@ -185,8 +185,21 @@ shinyServer(function(input, output, session) {
     }
   })
   
-
+  #
+  #-----------------------Remove Groups----------------
+  observeEvent(input$remove7, {
+    counter(counter() - 1)
+    updateSliderInput(inputId = "num_gps", value = counter())
+  })
   
+  observeEvent(input$remove6, {
+    if (input$num_gps == 6){
+      counter(counter() - 1)
+      updateSliderInput(inputId = "num_gps", value = counter())
+    } #Here need to figure out how to shuffle all downstream numbers to fit.
+  })
+  
+  #
   #-----------------------Scatter-------------------------
   
   # Construct scatter plot
