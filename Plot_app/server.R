@@ -15,6 +15,7 @@ shinyServer(function(input, output, session) {
     read.delim(file =input$txt_data$datapath)
   })
   
+  output$file_name <- renderText(paste("Source data:", input$txt_data$name))
   output$head_data <- renderTable(head(data()), rownames = TRUE)
   output$summary_data <- renderPrint(summary(data()))
   
@@ -43,7 +44,7 @@ shinyServer(function(input, output, session) {
     } else if (input$num_y == "2") {
       updateSelectInput(inputId = "yn", choices = c("columns" = "", choices))
       updateSelectInput(inputId = "yp", choices = c("columns" = "", choices))
-      updateTextInput(inputId = "ylab", value ="MAGeCK Score")
+      updateTextInput(inputId = "ylab", value ="Score")
     }
   })
   
@@ -209,7 +210,7 @@ shinyServer(function(input, output, session) {
     
     
     #Set up plotting dataframe
-    plot_gp_data <- plot_data()
+    plot_gp_data <- plot_data()[complete.cases(plot_data()),]
     plot_gp_data$Gp <- rep_len("Main", nrow(plot_gp_data))
     plot_gp_data$Mult <- rep_len(0, nrow(plot_gp_data))
     ##Define genes to be highlighted
@@ -456,8 +457,8 @@ shinyServer(function(input, output, session) {
     </p><br/>
               <b>Source Data:</b><br/>
                Input should be a tab delimited .txt file that includes data to be used in construction of scatterplot.<br/>
-               <i>Show preview of data:</i> First six rows of data are displayed. This feature can help ensure that the correct file was selected and has uploaded correctly, and which column header is being used for which attribute.<br/>
-               <i>Show summary of data:</i> Shows R-console output of summary command: this includes quartiles and mean for numeric inputs. This can be useful in seeing the distribution of data and helping decide cutoff values for adding colour highlight to a specific range of input values.<br/>
+               &emsp;<i>Show preview of data:</i> First six rows of data are displayed. This feature can help ensure that the correct file was selected and has uploaded correctly, and which column header is being used for which attribute.<br/>
+               &emsp;<i>Show summary of data:</i> Shows R-console output of summary command: this includes quartiles and mean for numeric inputs. This can be useful in seeing the distribution of data and helping decide cutoff values for adding colour highlight to a specific range of input values.<br/>
                <br/>
                <b>Data Attributes:</b><br/>
                Labels for data points can be extracted from either rownames of the imported data, or a specific column. Default colour for points is light gray.<br/>
@@ -467,11 +468,11 @@ shinyServer(function(input, output, session) {
                <b><i>Attribute name for X values:</i></b> Default name is column name selected for values. This name will be used as the plot's x-axis label, as well as for column header when saving information about selected genes.<br/>
                <br/>
                <b>Y-axis Attributes:</b><br/>
-               <i><b>Number of Inputs for Y-axis:</i></b> Can input single column, or two. Two column input is set up for input from MAGeCK analysis, such that the \"Score\" for the y-value is the negative score if  X-value < 0, or the positive score if X-value > 0. If your data requires a different manipulation, it is recommended to perform the transformations externally prior to importing the values to the Shiny.<br/>
+               <i><b>Number of Inputs for Y-axis:</i></b> Can input single column, or two. Two column input is set up such that the \"Score\" for the y-value is the negative score if  X-value < 0, or the positive score if X-value > 0. This is useful when using MAGeCK or drugZ output that separates relevant values from the sensitizer vs. resistance statistical tests. If your data requires a different manipulation, it is recommended to perform the transformations externally prior to importing the values to the Shiny.<br/>
                <i><b>Y values:</i></b> If 1 column is selected for number of y-inputs, choose data column here.<br/>
                <i><b>Negative Score:</i></b> If 2 column input is selected for y-values, these values will be used for the case when X-value < 0<br/>
                <i><b>Positive Score:</i></b> If 2 column input is selected for y-values, these values will be used for the case when X-value > 0<br/>
-               <i><b>Attribute name for y values:</i></b> Default name is column name when 1 column input is selected for y-values, or \"MAGeCK Score\" when 2 column input is selected for y-values. This name will be used as the plot's x-axis label, as well as for column header when saving information about selected genes.<br/>
+               <i><b>Attribute name for y values:</i></b> Default name is column name when 1 column input is selected for y-values, or \"Score\" when 2 column input is selected for y-values. This name will be used as the plot's x-axis label, as well as for column header when saving information about selected genes.<br/>
                <i><b>Transformations for y-axis:</i></b> Values for y-axis can be log transformed, reversed, or both.<br/>
                <br/>
                <b>Gene highlight groups:</b><br/>
@@ -499,6 +500,59 @@ shinyServer(function(input, output, session) {
          ")
   })
   
+  #
+  #-----------------------Example 1------------------
+  
+  output$fdr_image <- renderImage({
+    return(list(
+      src = "Ex/fdr_ex_screenshot.png",
+      filetype = "image/png",
+      alt = "Screenshot of 2 screen comparison",
+      width = "600",
+      height = "400"
+    ))
+  }, deleteFile = FALSE)
+  
+  output$fdr_desc <- renderUI({
+    HTML("<br/>Pictured above is a screenshot of using the app to compare the fdr_synth output of drugZ analysis for two screens. When saving the image using the button in the Shiny, only the plot will be saved, not the entire screenshot.<br/><br/>
+         Three groups were selected for adding highligh colours on the plot. CPT & Bleomycin were input using range data to highlight genes with FDR <= 0.01. Notice how ATM has a triangle shape on the plot to indicate that it is included in more than one group. The green points for \"Other\" group were labelled by clicking the points on the plot to select. The \"Current group for labelling\" at the top is selected to the \"Other\" group to indicate that points clicked in the plot get assigned to the correct group.<br/><br/>
+         The small table at the right of the image shows the gene that the mouse was hovering over at the time of the screenshot.<br/><br/>
+         The bottom of the image shows the warning from the ggplot labelling algorithm that was unable to label 21 selected points in the image. As you can see, there are a series of unlabelled points in the upper left corner for the CPT group that are too close together for the program to be able to properly label them in the image. These genes are still included in the saved genes list.<br/><br/>
+         Shown below are the first 13 rows of the datatable saved by downloading the genes selected to make the shown image. The display here has rounded to 6 digits, but the saved table will include all digits present in the source data. They were saved in Name order.<br/>"
+    )
+  })
+  
+  output$fdr_table <- renderTable({
+    head(read.delim("Ex/fdr_ex_genes.txt"), 13)
+  }, digits = 6)
+  
+  #
+  #-----------------------Example 2------------------
+  
+  output$volcano_image <- renderImage({
+    return(list(
+      src = "Ex/volcano_ex_screenshot.png",
+      filetype = "image/png",
+      alt = "Screenshot of volcano plot constructedfrom MAGeCK data",
+      width = "600",
+      height = "400"
+    ))
+  }, deleteFile = FALSE)
+  
+  output$volcano_desc <- renderUI({
+    HTML("<br/>Pictured above is a screenshot of using the app to compare the LFC and Score for each gene from the output of MAGeCK analysis for a single screen. When saving the image using the button in the Shiny, only the plot will be saved, not the entire screenshot.<br/><br/>
+    In this example, 2 columns were selected for the Y-input in order to account for the separation of positive and negative score in MAGeCK output. Log10 transformation and reverse y-axis were also selected to display the most significant genes at the top of the plot, and spaced for ease of viewing.<br/><br/>
+    Three groups were selected for adding highligh colours on the plot. Sensitizer & Resistance were highlighted by using the mouse to click and drag over the sections desired for labelling while the correct group was indicated in the \"Current group for labelling\" section. Notice how NEIL1 has a triangle shape on the plot to indicate that it is included in more than one group. The green points for \"Glycosylase\" group were labelled by inputing a list of gene names into the text box with \"Gene Input\" indicated as group type.<br/><br/>
+         The bottom of the image shows the warning from the ggplot labelling algorithm that was unable to label 8 selected points in the image. As you can see, there are a series of unlabelled points in the in the middle of the plot from the \"Glycosylase\" group that are too close together for the program to be able to properly label them in the image. These genes are still included in the saved genes list.<br/><br/>
+         Shown below are the first 6 rows of the datatable saved by downloading the genes selected to make the shown image. The display here has rounded to 4 digits, but the saved table will include all digits present in the source data. They were saved in Name order.<br/>"
+    )
+  })
+  
+  output$volcano_table <- renderTable({
+    head(read.delim("Ex/volcano_ex_genes.txt"), 6)
+  }, digits = 4)
+  
+  #
   #-----------------------Testing Section-------------
   
   
