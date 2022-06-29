@@ -196,7 +196,10 @@ shinyServer(function(input, output, session) {
     if (input$num_gps == 6){
       counter(counter() - 1)
       updateSliderInput(inputId = "num_gps", value = counter())
-    } #Here need to figure out how to shuffle all downstream numbers to fit.
+    } else {
+      genes_in6() <- genes_in7()
+      
+    }
   })
   
   #
@@ -215,37 +218,37 @@ shinyServer(function(input, output, session) {
     plot_gp_data$Gp <- rep_len("Main", nrow(plot_gp_data))
     plot_gp_data$Mult <- rep_len(0, nrow(plot_gp_data))
     ##Define genes to be highlighted
-    if (input$num_gps  >= 1) {
+    if ((input$num_gps  >= 1) & (input$inc_gp1 == TRUE)) {
       all_genes_1 <- c(genes_in1(), selected1())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_1, "Gp1", plot_gp_data$Gp)
       plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_1, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
-    if (input$num_gps >=2) {
+    if ((input$num_gps >=2) & (input$inc_gp2 == TRUE)) {
       all_genes_2 <- c(genes_in2(), selected2())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_2, "Gp2", plot_gp_data$Gp)
       plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_2, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
-    if (input$num_gps >= 3) {
+    if ((input$num_gps >= 3) & (input$inc_gp3 == TRUE)) {
       all_genes_3 <- c(genes_in3(), selected3())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_3, "Gp3", plot_gp_data$Gp)
       plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_3, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
-    if (input$num_gps >= 4) {
+    if ((input$num_gps >= 4) & (input$inc_gp4 == TRUE)) {
       all_genes_4 <- c(genes_in4(), selected4())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_4, "Gp4", plot_gp_data$Gp)
       plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_4, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
-    if (input$num_gps >= 5) {
+    if ((input$num_gps >= 5) & (input$inc_gp5 == TRUE)) {
       all_genes_5 <- c(genes_in5(), selected5())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_5, "Gp5", plot_gp_data$Gp)
       plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_5, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
-    if (input$num_gps >= 6) {
+    if ((input$num_gps >= 6) & (input$inc_gp6 == TRUE)) {
       all_genes_6 <- c(genes_in6(), selected6())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_6, "Gp6", plot_gp_data$Gp)
       plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_6, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
-    if (input$num_gps == 7) {
+    if ((input$num_gps == 7) & (input$inc_gp7 == TRUE)) {
       all_genes_7 <- c(genes_in7(), selected7())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_7, "Gp7", plot_gp_data$Gp)
       plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_7, plot_gp_data$Mult+1, plot_gp_data$Mult)
@@ -339,19 +342,19 @@ shinyServer(function(input, output, session) {
   #Use NearPoints to add labels to plot on click
   id_lab <- reactive({
     req(input$plot_click)
-    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Click")) {
+    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Click") & (input$inc_gp1 == TRUE)) {
       nearPoints(plot_data(), input$plot_click)[,1]
-    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Click") & (input$inc_gp2 == TRUE)) {
       nearPoints(plot_data(), input$plot_click)[,1]
-    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Click") & (input$inc_gp3 == TRUE)) {
       nearPoints(plot_data(), input$plot_click)[,1]
-    } else if ((input$current_gp == input$gp4) & (input$type4 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp4) & (input$type4 == "Plot Click") & (input$inc_gp4 == TRUE)) {
       nearPoints(plot_data(), input$plot_click)[,1]
-    } else if ((input$current_gp == input$gp5) & (input$type5 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp5) & (input$type5 == "Plot Click") & (input$inc_gp5 == TRUE)) {
       nearPoints(plot_data(), input$plot_click)[,1]
-    } else if ((input$current_gp == input$gp6) & (input$type6 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp6) & (input$type6 == "Plot Click") & (input$inc_gp6 == TRUE)) {
       nearPoints(plot_data(), input$plot_click)[,1]
-    } else if ((input$current_gp == input$gp7) & (input$type7 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp7) & (input$type7 == "Plot Click") & (input$inc_gp7 == TRUE)) {
       nearPoints(plot_data(), input$plot_click)[,1]
     } 
     
@@ -397,19 +400,19 @@ shinyServer(function(input, output, session) {
   #Add brushed points to selected
   brush_sel <- reactive({
     req(input$plot_brush)
-    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Click")) {
+    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Click") & (input$inc_gp1 == TRUE)) {
       brushedPoints(plot_data(), input$plot_brush)[,1]
-    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Click") & (input$inc_gp2 == TRUE)) {
       brushedPoints(plot_data(), input$plot_brush)[,1]
-    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Click") & (input$inc_gp3 == TRUE)) {
       brushedPoints(plot_data(), input$plot_brush)[,1]
-    } else if ((input$current_gp == input$gp4) & (input$type4 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp4) & (input$type4 == "Plot Click") & (input$inc_gp4 == TRUE)) {
       brushedPoints(plot_data(), input$plot_brush)[,1]
-    } else if ((input$current_gp == input$gp5) & (input$type5 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp5) & (input$type5 == "Plot Click") & (input$inc_gp5 == TRUE)) {
       brushedPoints(plot_data(), input$plot_brush)[,1]
-    } else if ((input$current_gp == input$gp6) & (input$type6 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp6) & (input$type6 == "Plot Click") & (input$inc_gp6 == TRUE)) {
       brushedPoints(plot_data(), input$plot_brush)[,1]
-    } else if ((input$current_gp == input$gp7) & (input$type7 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp7) & (input$type7 == "Plot Click") & (input$inc_gp7 == TRUE)) {
       brushedPoints(plot_data(), input$plot_brush)[,1]
     }
     
@@ -486,34 +489,77 @@ shinyServer(function(input, output, session) {
     filename = function(){
       paste0(input$dl_genes_name, ".txt")},
     content = function(file) {
+      #Initialize dataframe
+      dl_gene_df <- data.frame(Gene = NA, Xval = NA, Yval = NA, Group = NA)
       #Define genes to be highlighted
-      all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
-      all_genes_1_ind <- which(data_names() %in% all_genes_1)
-      dl_gene_df <- data.frame(Gene = all_genes_1, 
-                               Xval = data()[all_genes_1_ind,input$x],
-                               Yval = y_vals()[all_genes_1_ind],
-                               Group = rep(input$gp1, length(all_genes_1)))
+      if ((input$num_gps >=1) & (input$inc_gp1 == TRUE)){
+        all_genes_t <- c(genes_in1(), selected1())
+        all_genes_t_ind <- which(data_names() %in% all_genes_t)
+        dl_gene_dft <- data.frame(Gene = all_genes_t, 
+                                 Xval = data()[all_genes_t_ind,input$x],
+                                 Yval = y_vals()[all_genes_t_ind],
+                                 Group = rep(input$gp1, length(all_genes_t)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
+      }
+      if ((input$num_gps >= 2) & (input$inc_gp2 == TRUE)) {
+        all_genes_t <- c(genes_in2(), selected2())
+        all_genes_t_ind <- which(data_names() %in% all_genes_t)
+        dl_gene_dft <- data.frame(Gene = all_genes_t, 
+                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Yval = y_vals()[all_genes_t_ind],
+                                  Group = rep(input$gp2, length(all_genes_t)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
+      }
+      if ((input$num_gps >= 3) & (input$inc_gp3 == TRUE)) {
+        all_genes_t <- c(genes_in3(), selected3())
+        all_genes_t_ind <- which(data_names() %in% all_genes_t)
+        dl_gene_dft <- data.frame(Gene = all_genes_t, 
+                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Yval = y_vals()[all_genes_t_ind],
+                                  Group = rep(input$gp3, length(all_genes_t)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
+      }
+      if ((input$num_gps >= 4) & (input$inc_gp4 == TRUE)) {
+        all_genes_t <- c(genes_in4(), selected4())
+        all_genes_t_ind <- which(data_names() %in% all_genes_t)
+        dl_gene_dft <- data.frame(Gene = all_genes_t, 
+                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Yval = y_vals()[all_genes_t_ind],
+                                  Group = rep(input$gp4, length(all_genes_t)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
+      }
+      if ((input$num_gps >= 5) & (input$inc_gp5 == TRUE)) {
+        all_genes_t <- c(genes_in5(), selected5())
+        all_genes_t_ind <- which(data_names() %in% all_genes_t)
+        dl_gene_dft <- data.frame(Gene = all_genes_t, 
+                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Yval = y_vals()[all_genes_t_ind],
+                                  Group = rep(input$gp5, length(all_genes_t)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
+      }
+      if ((input$num_gps >= 6) & (input$inc_gp6 == TRUE)) {
+        all_genes_t <- c(genes_in6(), selected6())
+        all_genes_t_ind <- which(data_names() %in% all_genes_t)
+        dl_gene_dft <- data.frame(Gene = all_genes_t, 
+                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Yval = y_vals()[all_genes_t_ind],
+                                  Group = rep(input$gp6, length(all_genes_t)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
+      }
+      if ((input$num_gps == 7) & (input$inc_gp7 == TRUE)) {
+        all_genes_t <- c(genes_in7(), selected7())
+        all_genes_t_ind <- which(data_names() %in% all_genes_t)
+        dl_gene_dft <- data.frame(Gene = all_genes_t, 
+                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Yval = y_vals()[all_genes_t_ind],
+                                  Group = rep(input$gp7, length(all_genes_t)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
+      }
+      #Remove initializing row if dataframe has content. Otherwise, return frame as is with only NA values
+      if (nrow(dl_gene_df) > 1){
+        dl_gene_df <- dl_gene_df[-1,]
+      }
       
-      if (input$num_gps >= 2) {
-        all_genes_2 <- c(gene_sub2(), genes_in2(), selected2())
-        all_genes_2_ind <- which(data_names() %in% all_genes_2)
-        dl_gene_df2 <- data.frame(Gene = all_genes_2, 
-                                  Xval = data()[all_genes_2_ind,input$x],
-                                  Yval = y_vals()[all_genes_2_ind],
-                                  Group = rep(input$gp2, length(all_genes_2)))
-        dl_gene_df <- rbind(dl_gene_df, dl_gene_df2)
-        
-      }
-      if (input$num_gps == 3) {
-        all_genes_3 <- c(gene_sub3(), genes_in3(), selected3())
-        all_genes_3_ind <- which(data_names() %in% all_genes_3)
-        dl_gene_df3 <- data.frame(Gene = all_genes_3, 
-                                  Xval = data()[all_genes_3_ind,input$x],
-                                  Yval = y_vals()[all_genes_3_ind],
-                                  Group = rep(input$gp3, length(all_genes_3)))
-        dl_gene_df <- rbind(dl_gene_df, dl_gene_df3)
-        
-      }
       if (input$dl_genes_order == "Name") {
         dl_gene_df <- dl_gene_df[order(dl_gene_df$Gene),]
       } else if (input$dl_genes_order == "X-Value") {

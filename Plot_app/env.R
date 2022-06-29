@@ -36,9 +36,10 @@ condPan01 <- function(number) {
                                                                actionButton(paste0("reset_interact", number), 
                                                                             paste0("Reset gene selection"),
                                                                             style = "color: #fff; background-color: #a16e02; border-color: #260000")),
-                                              actionButton(paste0("remove", number), 
-                                                           paste0("Remove Group"),
-                                                           style = "color: #fff; background-color: #630101; border-color: #260000"),
+                                              #tags$br(),
+                                              #actionButton(paste0("remove", number), 
+                                              #             paste0("Remove Group"),
+                                              #             style = "color: #fff; background-color: #630101; border-color: #260000"),
                                               style = "info"
                               ) #End collapse panel
                    ) #End bsCollapse
