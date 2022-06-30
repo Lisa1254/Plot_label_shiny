@@ -17,7 +17,6 @@ condPan01 <- function(number) {
   conditionalPanel(paste0("input.num_gps >=", as.numeric(number)),
                    bsCollapse(id = paste0("collapse_gp", number),
                               bsCollapsePanel(paste0("Group ", number, " Attributes"),
-                                              checkboxInput(paste0("inc_gp", number), label="Include group in plot", value = TRUE),
                                               textInput(paste0("gp", number), label = "Group Name:"),
                                               selectInput(paste0("col", number), label = paste0("Colour for Group ", number),
                                                           choices = col_hex, selected = col_hex[as.numeric(number)+1]),

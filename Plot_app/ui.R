@@ -78,11 +78,12 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                               conditionalPanel(condition = "input.preview == true", tableOutput("head_data")),
                               #If requested, show data summary - useful for seeing value ranges when selecting data highlight on plot
                               conditionalPanel(condition = "input.summary == true", verbatimTextOutput("summary_data")),
-
-                              conditionalPanel("input.num_gps >=1 & 
-                       (input.type1 == `Plot Click` | input.type2 == `Plot Click` | input.type3 == `Plot Click`)",
+                              
+                              checkboxGroupInput("inc_groups", "Groups to include in plot/save", choices = NULL, inline = TRUE),
+                              conditionalPanel("input.num_gps >=1",
                                                radioButtons("current_gp", "Current group for labelling", 
                                                             choices = "none", inline = T)),
+
                               fluidRow(column(8, plotOutput("scatter", click = "plot_click", hover = "plot_hover", brush = "plot_brush")),
                                        column(3, tableOutput("nT_hover"))),
                               
