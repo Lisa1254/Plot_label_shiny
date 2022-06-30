@@ -43,17 +43,26 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                                                          textInput("ylab", "Attribute name for y values", placeholder = "e.g. Score (log10)"),
                                                          checkboxGroupInput("y_trans", "Transformations for y-axis:", c("log10", "reverse")),
                                                          style = "success"
-                                         ) #end Y attributes
+                                         ), #end Y attributes
+                                         bsCollapsePanel("Gene highlight groups",
+                                                         #Use button input to add groups
+                                                         actionButton("add_gp", "Add highlight group", style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                                                         #Alert for too many groups
+                                                         bsAlert("gp_alert"),
+                                                         tags$br(),
+                                                         #Use hidden slider to allow conditional groups
+                                                         conditionalPanel("input.num_gps >=8",
+                                                                          sliderInput("num_gps", "How many highlighted groups?", min=0, max=7, step=1, value=0)),
+                                                         #Display number of groups selected
+                                                         map_conds,
+                                                         style = "info"
+                                         ) #end gene highlight groups collapse panel
                               ), #end collapseData bsCollapse
 
                               
-                              bsCollapse(id = "all_highlight",
-                                         bsCollapsePanel("Gene highlight groups",
-                                                         sliderInput("num_gps", "How many highlighted groups?", min=0, max=3, step=1, value=0),
-                                                         map_conds,
-                                                         style = "success"
-                                         ) #end gene highlight groups collapse panel
-                              ), #end all_highlight collapse panel
+                              #bsCollapse(id = "all_highlight",
+                                         
+                              #), #end all_highlight collapse panel
                               
                               #Click to plot or reset plot
                               actionButton("plot", "Construct Plot", style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")
@@ -69,11 +78,12 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                               conditionalPanel(condition = "input.preview == true", tableOutput("head_data")),
                               #If requested, show data summary - useful for seeing value ranges when selecting data highlight on plot
                               conditionalPanel(condition = "input.summary == true", verbatimTextOutput("summary_data")),
-
-                              conditionalPanel("input.num_gps >=1 & 
-                       (input.type1 == `Plot Click` | input.type2 == `Plot Click` | input.type3 == `Plot Click`)",
+                              
+                              checkboxGroupInput("inc_groups", "Groups to include in plot/save", choices = NULL, inline = TRUE),
+                              conditionalPanel("input.num_gps >=1",
                                                radioButtons("current_gp", "Current group for labelling", 
                                                             choices = "none", inline = T)),
+
                               fluidRow(column(8, plotOutput("scatter", click = "plot_click", hover = "plot_hover", brush = "plot_brush")),
                                        column(3, tableOutput("nT_hover"))),
                               

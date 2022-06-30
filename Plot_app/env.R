@@ -16,25 +16,29 @@ col_hex <- setNames(c("lightgray", "#56B4E9", "#E69F00", "#009E73", "#F0E442", "
 condPan01 <- function(number) {
   conditionalPanel(paste0("input.num_gps >=", as.numeric(number)),
                    bsCollapse(id = paste0("collapse_gp", number),
-                              bsCollapsePanel(paste0("Attributes for Highlight Group ", number),
+                              bsCollapsePanel(paste0("Group ", number, " Attributes"),
                                               textInput(paste0("gp", number), label = "Group Name:"),
                                               selectInput(paste0("col", number), label = paste0("Colour for Group ", number),
                                                           choices = col_hex, selected = col_hex[as.numeric(number)+1]),
                                               radioButtons(paste0("type", number), label = paste0("Input Type for Group ", number), choices = c("Plot Click", "Specified Values", "Gene Input")),
                                               conditionalPanel(paste0("input.type", number, " == `Specified Values`"),
-                                                               textInput(paste0("minX", number), "X Value Minumum", value = 0),
-                                                               textInput(paste0("maxX", number), "X Value Maximum", value = 0),
-                                                               textInput(paste0("minY", number), "Y Value Minumum", value = 0),
-                                                               textInput(paste0("maxY", number), "Y Value Maximum", value = 0)
+                                                               fluidRow(column(6,textInput(paste0("minX", number), "X Min", value = 0)),
+                                                               column(6,textInput(paste0("maxX", number), "X Max", value = 0))),
+                                                               fluidRow(column(6,textInput(paste0("minY", number), "Y Min", value = 0)),
+                                                               column(6,textInput(paste0("maxY", number), "Y Max", value = 0)))
                                                                
                                               ), #conditional panel for specified vales end
                                               conditionalPanel(paste0("input.type", number, " == `Gene Input`"),
-                                                               textAreaInput(paste0("genes", number), "Genes list:", "", width="200px", height="240px")
+                                                               textAreaInput(paste0("genes", number), "Genes list:", "", width="200px", rows = 4)
                                               ), #Conditional panel  for gene input end
                                               conditionalPanel(paste0("input.type", number, "== `Plot Click`"),
                                                                actionButton(paste0("reset_interact", number), 
                                                                             paste0("Reset gene selection"),
-                                                                            style = "color: #fff; background-color: #630101; border-color: #260000")),
+                                                                            style = "color: #fff; background-color: #a16e02; border-color: #260000")),
+                                              #tags$br(),
+                                              #actionButton(paste0("remove", number), 
+                                              #             paste0("Remove Group"),
+                                              #             style = "color: #fff; background-color: #630101; border-color: #260000"),
                                               style = "info"
                               ) #End collapse panel
                    ) #End bsCollapse
@@ -47,7 +51,7 @@ condPan01 <- function(number) {
 
 
 #Apply conditional panel for 3 possible group inputs
-map_conds <- map(c(1,2,3), condPan01)
+map_conds <- map(c(1,2,3,4,5,6,7), condPan01)
 
 #
 #Function to parse gene list input ----

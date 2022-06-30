@@ -98,58 +98,22 @@ shinyServer(function(input, output, session) {
   #-----------------------Group Vars-------------------------
   
   # Set up graphical parameters for genes of interest, up to three groups
-  all_labels <- reactive(c(input$gp1, input$gp2, input$gp3)[1:input$num_gps])
-  #all_labels <- reactive({
-  #  disp_labs <- vector()
-  #  if (input$type1 == "Plot Click") {
-  #    disp_labs <- c(disp_labs, input$gp1)
-  #  }
-  #  if ((input$type2 == "Plot Click") ) { #& (input$num_gps >= 2)
-  #    disp_labs <- c(disp_labs, input$gp2)
-  #  }
-  #  if ((input$type3 == "Plot Click") ) { #& (input$num_gps == 3)
-  #    disp_labs <- c(disp_labs, input$gp3)
-  #  }
-  #  return(disp_labs)
-  #  })
-  
-  #Need to figure out how to better iterate or make a module/function for this
-  observeEvent(input$gp1, {
-    updateSelectInput(inputId = "col1", label = paste0("Colour for ", input$gp1))
-    updateRadioButtons(inputId = "current_gp", choices =all_labels(), inline = T)
-    updateRadioButtons(inputId = "type1", label = paste0("Input Type for ", input$gp1))
+  all_labels <- reactive(c(input$gp1, input$gp2, input$gp3, input$gp4, input$gp5, input$gp6, input$gp7)[1:input$num_gps])
+ 
+  observeEvent(all_labels(), {
+    updateRadioButtons(inputId = "current_gp", choices = all_labels(), inline = T)
   })
   
-#  observeEvent(input$type1, {
-#    updateRadioButtons(inputId = "current_gp", choices =all_labels(), inline = T)
-#  })
-#  observeEvent(input$type2, {
-#    updateRadioButtons(inputId = "current_gp", choices =all_labels(), inline = T)
-#  })
-#  observeEvent(input$type3, {
-#    updateRadioButtons(inputId = "current_gp", choices =all_labels(), inline = T)
-#  })
+ 
   
-  #observeEvent(input$num_gps, {
-  #  updateRadioButtons(inputId = "current_gp", choices =all_labels(), inline = T)
-  #})
-  
-  observeEvent(input$gp2,{
-    updateSelectInput(inputId = "col2", label = paste0("Colour for ", input$gp2))
-    updateRadioButtons(inputId = "current_gp", choices =all_labels(), inline = T)
-    updateRadioButtons(inputId = "type2", label = paste0("Input Type for ", input$gp2))
-  })
-  observeEvent(input$gp3,{
-    updateSelectInput(inputId = "col3", label = paste0("Colour for ", input$gp3))
-    updateRadioButtons(inputId = "current_gp", choices =all_labels(), inline = T)
-    updateRadioButtons(inputId = "type3", label = paste0("Input Type for ", input$gp3))
-  })
-  
-  
-  #If specific input list of genes:
+  #Set up specified gene inputs:
+  #Can't seem to figure out lapply or otherwise reactive use within a loop. Try to clean code later
   genes_in1 <- reactive({
     if (input$type1 == "Gene Input") {
       list_split(input$genes1)[which(list_split(input$genes1) %in% data_names())]
+    } else if (input$type1 == "Specified Values") {
+      subset_genes(data(), input$x, as.numeric(input$minX1), as.numeric(input$maxX1), 
+                   y_vals(), as.numeric(input$minY1), as.numeric(input$maxY1), data_names())
     } else {
       vector()
     }
@@ -158,6 +122,9 @@ shinyServer(function(input, output, session) {
   genes_in2 <- reactive({
     if (input$type2 == "Gene Input") {
       list_split(input$genes2)[which(list_split(input$genes2) %in% data_names())]
+    } else if (input$type2 == "Specified Values") {
+      subset_genes(data(), input$x, as.numeric(input$minX2), as.numeric(input$maxX2), 
+                   y_vals(), as.numeric(input$minY2), as.numeric(input$maxY2), data_names())
     } else {
       vector()
     }
@@ -166,32 +133,7 @@ shinyServer(function(input, output, session) {
   genes_in3 <- reactive({
     if (input$type3 == "Gene Input") {
       list_split(input$genes3)[which(list_split(input$genes3) %in% data_names())]
-    } else {
-      vector()
-    }
-  })
-  
-  #If range values specified for genes
-  gene_sub1 <- reactive({
-    if (input$type1 == "Specified Values") {
-      subset_genes(data(), input$x, as.numeric(input$minX1), as.numeric(input$maxX1), 
-                   y_vals(), as.numeric(input$minY1), as.numeric(input$maxY1), data_names())
-    } else {
-      vector()
-    }
-  })
-  
-  gene_sub2 <- reactive({
-    if (input$type2 == "Specified Values") {
-      subset_genes(data(), input$x, as.numeric(input$minX2), as.numeric(input$maxX2), 
-                   y_vals(), as.numeric(input$minY2), as.numeric(input$maxY2), data_names())
-    } else {
-      vector()
-    }
-  })
-  
-  gene_sub3 <- reactive({
-    if (input$type3 == "Specified Values") {
+    } else if (input$type3 == "Specified Values") {
       subset_genes(data(), input$x, as.numeric(input$minX3), as.numeric(input$maxX3), 
                    y_vals(), as.numeric(input$minY3), as.numeric(input$maxY3), data_names())
     } else {
@@ -199,6 +141,51 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  genes_in4 <- reactive({
+    if (input$type4 == "Gene Input") {
+      list_split(input$genes4)[which(list_split(input$genes4) %in% data_names())]
+    } else if (input$type4 == "Specified Values") {
+      subset_genes(data(), input$x, as.numeric(input$minX4), as.numeric(input$maxX4), 
+                   y_vals(), as.numeric(input$minY4), as.numeric(input$maxY4), data_names())
+    } else {
+      vector()
+    }
+  })
+  
+  genes_in5 <- reactive({
+    if (input$type5 == "Gene Input") {
+      list_split(input$genes5)[which(list_split(input$genes5) %in% data_names())]
+    } else if (input$type5 == "Specified Values") {
+      subset_genes(data(), input$x, as.numeric(input$minX5), as.numeric(input$maxX5), 
+                   y_vals(), as.numeric(input$minY5), as.numeric(input$maxY5), data_names())
+    } else {
+      vector()
+    }
+  })
+  
+  genes_in6 <- reactive({
+    if (input$type6 == "Gene Input") {
+      list_split(input$genes6)[which(list_split(input$genes6) %in% data_names())]
+    } else if (input$type6 == "Specified Values") {
+      subset_genes(data(), input$x, as.numeric(input$minX6), as.numeric(input$maxX6), 
+                   y_vals(), as.numeric(input$minY6), as.numeric(input$maxY6), data_names())
+    } else {
+      vector()
+    }
+  })
+  
+  genes_in7 <- reactive({
+    if (input$type7 == "Gene Input") {
+      list_split(input$genes7)[which(list_split(input$genes7) %in% data_names())]
+    } else if (input$type7 == "Specified Values") {
+      subset_genes(data(), input$x, as.numeric(input$minX7), as.numeric(input$maxX7), 
+                   y_vals(), as.numeric(input$minY7), as.numeric(input$maxY7), data_names())
+    } else {
+      vector()
+    }
+  })
+  
+  #
   #-----------------------Scatter-------------------------
   
   # Construct scatter plot
@@ -214,24 +201,45 @@ shinyServer(function(input, output, session) {
     plot_gp_data$Gp <- rep_len("Main", nrow(plot_gp_data))
     plot_gp_data$Mult <- rep_len(0, nrow(plot_gp_data))
     ##Define genes to be highlighted
-    if (input$num_gps  >= 1) {
-      all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
+    if ((input$num_gps  >= 1) & ("Group 1" %in% input$inc_groups)) {
+      all_genes_1 <- c(genes_in1(), selected1())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_1, "Gp1", plot_gp_data$Gp)
       plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_1, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
-    if (input$num_gps >=2) {
-      all_genes_2 <- c(gene_sub2(), genes_in2(), selected2())
+    if ((input$num_gps >=2) & ("Group 2" %in% input$inc_groups)) {
+      all_genes_2 <- c(genes_in2(), selected2())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_2, "Gp2", plot_gp_data$Gp)
       plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_2, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
-    if (input$num_gps == 3) {
-      all_genes_3 <- c(gene_sub3(), genes_in3(), selected3())
+    if ((input$num_gps >= 3) & ("Group 3" %in% input$inc_groups)) {
+      all_genes_3 <- c(genes_in3(), selected3())
       plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_3, "Gp3", plot_gp_data$Gp)
       plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_3, plot_gp_data$Mult+1, plot_gp_data$Mult)
+    }
+    if ((input$num_gps >= 4) & ("Group 4" %in% input$inc_groups)) {
+      all_genes_4 <- c(genes_in4(), selected4())
+      plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_4, "Gp4", plot_gp_data$Gp)
+      plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_4, plot_gp_data$Mult+1, plot_gp_data$Mult)
+    }
+    if ((input$num_gps >= 5) & ("Group 5" %in% input$inc_groups)) {
+      all_genes_5 <- c(genes_in5(), selected5())
+      plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_5, "Gp5", plot_gp_data$Gp)
+      plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_5, plot_gp_data$Mult+1, plot_gp_data$Mult)
+    }
+    if ((input$num_gps >= 6) & ("Group 6" %in% input$inc_groups)) {
+      all_genes_6 <- c(genes_in6(), selected6())
+      plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_6, "Gp6", plot_gp_data$Gp)
+      plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_6, plot_gp_data$Mult+1, plot_gp_data$Mult)
+    }
+    if ((input$num_gps == 7) & ("Group 7" %in% input$inc_groups)) {
+      all_genes_7 <- c(genes_in7(), selected7())
+      plot_gp_data$Gp <- ifelse(plot_gp_data$ID %in% all_genes_7, "Gp7", plot_gp_data$Gp)
+      plot_gp_data$Mult <- ifelse(plot_gp_data$ID %in% all_genes_7, plot_gp_data$Mult+1, plot_gp_data$Mult)
     }
     
     plot_gp_data$Gp <- factor(plot_gp_data$Gp)
     plot_gp_data[which(plot_gp_data$Mult == 1),"Mult"] <- 0
+    plot_gp_data[which(plot_gp_data$Mult > 3), "Mult"] <- 3
     plot_gp_data$Mult <- factor(plot_gp_data$Mult)
     
     #To get input genes plotted last, and therefore with the colour displaying when cluttered, organize those points to the bottom. For now, will just put all "Main" at the top, but consider adding feature to check for if input type is a gene list, as that gets priority to the bottom rather than a selection type
@@ -240,18 +248,26 @@ shinyServer(function(input, output, session) {
                               plot_gp_data[-ind_mains,])
     
     #Define colours
-    cols <- c("Main" = input$col_m, "Gp1" = input$col1, "Gp2" = input$col2, "Gp3" = input$col3)[1:(input$num_gps+1)]
+    cols <- c("Main" = input$col_m, "Gp1" = input$col1, "Gp2" = input$col2, "Gp3" = input$col3, "Gp4" = input$col4, "Gp5" = input$col5, "Gp6" = input$col6, "Gp7" = input$col7)[1:(input$num_gps+1)]
     
     #Set up scatter plot with or without colour for input groups
-    if (input$num_gps == 0){
+    if ((input$num_gps == 0) | (is.null(input$inc_groups))){
       g <- ggplot(data=plot_gp_data_ord) +
         geom_point(aes(x=X_Value, y=Y_Value), shape = 16, size = 3, color = input$col_m) +
         theme(legend.position = "none")
         
     } else {
+      #Define index of included groups:
+      inc_ind <- vector()
+      for (i in 1:input$num_gps){
+        if (sum(grepl(as.character(i), input$inc_groups))>0){
+          inc_ind <- c(inc_ind, i)
+        }
+        }
+      #Plot with included groups
       g <- ggplot(data=plot_gp_data_ord) +
         geom_point(aes(x=X_Value, y=Y_Value, color = Gp, shape = Mult), size = 3) +
-        scale_color_manual(name = "Groups", labels = c("NA", all_labels()), values = cols) +
+        scale_color_manual(name = "Groups", labels = c("NA", all_labels()[inc_ind]), values = cols[c(1,1+inc_ind)]) +
         geom_text_repel(aes(x=X_Value, y=Y_Value, label=ifelse(Gp=="Main", '', ID)), 
                         min.segment.length = 0, size = 3, max.overlaps = 15)
 
@@ -262,7 +278,7 @@ shinyServer(function(input, output, session) {
     } else if (max(as.numeric(plot_gp_data$Mult)) == 2) {
       g <- g + scale_shape_manual(name = "Number of groups", labels = c("0-1 groups", "2 groups"), values = c(16,17))
     } else if (max(as.numeric(plot_gp_data$Mult)) == 3) {
-      g <- g + scale_shape_manual(name = "Number of groups", labels = c("0-1 groups", "2 groups", "3 groups"), values = c(16,17,15))
+      g <- g + scale_shape_manual(name = "Number of groups", labels = c("0-1 groups", "2 groups", "3 or more groups"), values = c(16,17,15))
     } 
     
     #Add common elements to plot types with or without coloured points
@@ -302,6 +318,7 @@ shinyServer(function(input, output, session) {
   
   #-----------------------Mouse Input-------------------------
   
+  #----------------------------Hover----
   # Use mouse input to select points of interest
   
   #On mouse hover, display Near Point data
@@ -312,20 +329,28 @@ shinyServer(function(input, output, session) {
   
   output$nT_hover <- renderTable(nearTable_h())
   
+  #----------------------------PlotClickId----
   #Use NearPoints to add labels to plot on click
-  
   id_lab <- reactive({
     req(input$plot_click)
-    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Click")) {
+    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Click") & ("Group 1" %in% input$inc_groups)) {
       nearPoints(plot_data(), input$plot_click)[,1]
-    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Click") & ("Group 2" %in% input$inc_groups)) {
       nearPoints(plot_data(), input$plot_click)[,1]
-    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Click") & ("Group 3" %in% input$inc_groups)) {
+      nearPoints(plot_data(), input$plot_click)[,1]
+    } else if ((input$current_gp == input$gp4) & (input$type4 == "Plot Click") & ("Group 4" %in% input$inc_groups)) {
+      nearPoints(plot_data(), input$plot_click)[,1]
+    } else if ((input$current_gp == input$gp5) & (input$type5 == "Plot Click") & ("Group 5" %in% input$inc_groups)) {
+      nearPoints(plot_data(), input$plot_click)[,1]
+    } else if ((input$current_gp == input$gp6) & (input$type6 == "Plot Click") & ("Group 6" %in% input$inc_groups)) {
+      nearPoints(plot_data(), input$plot_click)[,1]
+    } else if ((input$current_gp == input$gp7) & (input$type7 == "Plot Click") & ("Group 7" %in% input$inc_groups)) {
       nearPoints(plot_data(), input$plot_click)[,1]
     } 
     
   })
-  
+  #----------------------------reactiveVal----
   selected1 <- reactiveVal({
     vector()
   })
@@ -335,37 +360,70 @@ shinyServer(function(input, output, session) {
   selected3 <- reactiveVal({
     vector()
   })
+  selected4 <- reactiveVal({
+    vector()
+  })
+  selected5 <- reactiveVal({
+    vector()
+  })
+  selected6 <- reactiveVal({
+    vector()
+  })
+  selected7 <- reactiveVal({
+    vector()
+  })
   
+  #----------------------------observePlotClick----
   observeEvent(input$plot_click, {
     gp_sel <- paste0("gp", as.character(which(all_labels() == input$current_gp)))
     switch(gp_sel,
            gp1 = selected1(unique(c(id_lab(), selected1()))),
            gp2 = selected2(unique(c(id_lab(), selected2()))),
-           gp3 = selected3(unique(c(id_lab(), selected3())))
+           gp3 = selected3(unique(c(id_lab(), selected3()))),
+           gp4 = selected4(unique(c(id_lab(), selected4()))),
+           gp5 = selected5(unique(c(id_lab(), selected5()))),
+           gp6 = selected6(unique(c(id_lab(), selected6()))),
+           gp7 = selected7(unique(c(id_lab(), selected7())))
     )
   })
   
+  #----------------------------brushSelectId----
   #Add brushed points to selected
   brush_sel <- reactive({
     req(input$plot_brush)
-    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Click")) {
+    if ((input$current_gp == input$gp1) & (input$type1 == "Plot Click") & ("Group 1" %in% input$inc_groups)) {
       brushedPoints(plot_data(), input$plot_brush)[,1]
-    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp2) & (input$type2 == "Plot Click") & ("Group 2" %in% input$inc_groups)) {
       brushedPoints(plot_data(), input$plot_brush)[,1]
-    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Click")) {
+    } else if ((input$current_gp == input$gp3) & (input$type3 == "Plot Click") & ("Group 3" %in% input$inc_groups)) {
+      brushedPoints(plot_data(), input$plot_brush)[,1]
+    } else if ((input$current_gp == input$gp4) & (input$type4 == "Plot Click") & ("Group 4" %in% input$inc_groups)) {
+      brushedPoints(plot_data(), input$plot_brush)[,1]
+    } else if ((input$current_gp == input$gp5) & (input$type5 == "Plot Click") & ("Group 5" %in% input$inc_groups)) {
+      brushedPoints(plot_data(), input$plot_brush)[,1]
+    } else if ((input$current_gp == input$gp6) & (input$type6 == "Plot Click") & ("Group 6" %in% input$inc_groups)) {
+      brushedPoints(plot_data(), input$plot_brush)[,1]
+    } else if ((input$current_gp == input$gp7) & (input$type7 == "Plot Click") & ("Group 7" %in% input$inc_groups)) {
       brushedPoints(plot_data(), input$plot_brush)[,1]
     }
     
   })
+  
+  #----------------------------observeBrush----
   observeEvent(input$plot_brush,{
     gp_sel <- paste0("gp", as.character(which(all_labels() == input$current_gp)))
     switch(gp_sel,
            gp1 = selected1(unique(c(brush_sel(), selected1()))),
            gp2 = selected2(unique(c(brush_sel(), selected2()))),
-           gp3 = selected3(unique(c(brush_sel(), selected3())))
+           gp3 = selected3(unique(c(brush_sel(), selected3()))),
+           gp4 = selected4(unique(c(brush_sel(), selected4()))),
+           gp5 = selected5(unique(c(brush_sel(), selected5()))),
+           gp6 = selected6(unique(c(brush_sel(), selected6()))),
+           gp7 = selected7(unique(c(brush_sel(), selected7())))
     )
   })
   
+  #----------------------------resets----
   #If reset group button clicked, remove all values in selection
   observeEvent(input$reset_interact1, {
     selected1(vector())
@@ -376,12 +434,28 @@ shinyServer(function(input, output, session) {
   observeEvent(input$reset_interact3, {
     selected3(vector())
   })
+  observeEvent(input$reset_interact4, {
+    selected4(vector())
+  })
+  observeEvent(input$reset_interact5, {
+    selected5(vector())
+  })
+  observeEvent(input$reset_interact6, {
+    selected6(vector())
+  })
+  observeEvent(input$reset_interact7, {
+    selected7(vector())
+  })
   
   #If new plot generated, reset selected info
   observeEvent(input$plot, {
     selected1(vector())
     selected2(vector())
     selected3(vector())
+    selected4(vector())
+    selected5(vector())
+    selected6(vector())
+    selected7(vector())
   })
   
   #-----------------------Download-------------------------
@@ -406,34 +480,77 @@ shinyServer(function(input, output, session) {
     filename = function(){
       paste0(input$dl_genes_name, ".txt")},
     content = function(file) {
+      #Initialize dataframe
+      dl_gene_df <- data.frame(Gene = NA, Xval = NA, Yval = NA, Group = NA)
       #Define genes to be highlighted
-      all_genes_1 <- c(gene_sub1(), genes_in1(), selected1())
-      all_genes_1_ind <- which(data_names() %in% all_genes_1)
-      dl_gene_df <- data.frame(Gene = all_genes_1, 
-                               Xval = data()[all_genes_1_ind,input$x],
-                               Yval = y_vals()[all_genes_1_ind],
-                               Group = rep(input$gp1, length(all_genes_1)))
+      if ((input$num_gps >=1) & ("Group 1" %in% input$inc_groups)){
+        all_genes_t <- c(genes_in1(), selected1())
+        all_genes_t_ind <- which(data_names() %in% all_genes_t)
+        dl_gene_dft <- data.frame(Gene = all_genes_t, 
+                                 Xval = data()[all_genes_t_ind,input$x],
+                                 Yval = y_vals()[all_genes_t_ind],
+                                 Group = rep(input$gp1, length(all_genes_t)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
+      }
+      if ((input$num_gps >= 2) & ("Group 2" %in% input$inc_groups)) {
+        all_genes_t <- c(genes_in2(), selected2())
+        all_genes_t_ind <- which(data_names() %in% all_genes_t)
+        dl_gene_dft <- data.frame(Gene = all_genes_t, 
+                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Yval = y_vals()[all_genes_t_ind],
+                                  Group = rep(input$gp2, length(all_genes_t)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
+      }
+      if ((input$num_gps >= 3) & ("Group 3" %in% input$inc_groups)) {
+        all_genes_t <- c(genes_in3(), selected3())
+        all_genes_t_ind <- which(data_names() %in% all_genes_t)
+        dl_gene_dft <- data.frame(Gene = all_genes_t, 
+                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Yval = y_vals()[all_genes_t_ind],
+                                  Group = rep(input$gp3, length(all_genes_t)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
+      }
+      if ((input$num_gps >= 4) & ("Group 4" %in% input$inc_groups)) {
+        all_genes_t <- c(genes_in4(), selected4())
+        all_genes_t_ind <- which(data_names() %in% all_genes_t)
+        dl_gene_dft <- data.frame(Gene = all_genes_t, 
+                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Yval = y_vals()[all_genes_t_ind],
+                                  Group = rep(input$gp4, length(all_genes_t)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
+      }
+      if ((input$num_gps >= 5) & ("Group 5" %in% input$inc_groups)) {
+        all_genes_t <- c(genes_in5(), selected5())
+        all_genes_t_ind <- which(data_names() %in% all_genes_t)
+        dl_gene_dft <- data.frame(Gene = all_genes_t, 
+                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Yval = y_vals()[all_genes_t_ind],
+                                  Group = rep(input$gp5, length(all_genes_t)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
+      }
+      if ((input$num_gps >= 6) & ("Group 6" %in% input$inc_groups)) {
+        all_genes_t <- c(genes_in6(), selected6())
+        all_genes_t_ind <- which(data_names() %in% all_genes_t)
+        dl_gene_dft <- data.frame(Gene = all_genes_t, 
+                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Yval = y_vals()[all_genes_t_ind],
+                                  Group = rep(input$gp6, length(all_genes_t)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
+      }
+      if ((input$num_gps == 7) & ("Group 7" %in% input$inc_groups)) {
+        all_genes_t <- c(genes_in7(), selected7())
+        all_genes_t_ind <- which(data_names() %in% all_genes_t)
+        dl_gene_dft <- data.frame(Gene = all_genes_t, 
+                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Yval = y_vals()[all_genes_t_ind],
+                                  Group = rep(input$gp7, length(all_genes_t)))
+        dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
+      }
+      #Remove initializing row if dataframe has content. Otherwise, return frame as is with only NA values
+      if (nrow(dl_gene_df) > 1){
+        dl_gene_df <- dl_gene_df[-1,]
+      }
       
-      if (input$num_gps >= 2) {
-        all_genes_2 <- c(gene_sub2(), genes_in2(), selected2())
-        all_genes_2_ind <- which(data_names() %in% all_genes_2)
-        dl_gene_df2 <- data.frame(Gene = all_genes_2, 
-                                  Xval = data()[all_genes_2_ind,input$x],
-                                  Yval = y_vals()[all_genes_2_ind],
-                                  Group = rep(input$gp2, length(all_genes_2)))
-        dl_gene_df <- rbind(dl_gene_df, dl_gene_df2)
-        
-      }
-      if (input$num_gps == 3) {
-        all_genes_3 <- c(gene_sub3(), genes_in3(), selected3())
-        all_genes_3_ind <- which(data_names() %in% all_genes_3)
-        dl_gene_df3 <- data.frame(Gene = all_genes_3, 
-                                  Xval = data()[all_genes_3_ind,input$x],
-                                  Yval = y_vals()[all_genes_3_ind],
-                                  Group = rep(input$gp3, length(all_genes_3)))
-        dl_gene_df <- rbind(dl_gene_df, dl_gene_df3)
-        
-      }
       if (input$dl_genes_order == "Name") {
         dl_gene_df <- dl_gene_df[order(dl_gene_df$Gene),]
       } else if (input$dl_genes_order == "X-Value") {
@@ -449,12 +566,10 @@ shinyServer(function(input, output, session) {
   #-----------------------Help-------------------------
   
   output$help <- renderUI({
-    HTML(" This Shiny application makes a scatterplot from the X & Y values as supplied in a data table uploaded in a tab delimited .txt format. Application currently supports three different groups of highlighting labels with accepted input for gene choice for each group including plot interaction (click or drag select), range of spcified values, or input gene list.<br/>
+    HTML(" This Shiny application makes a scatterplot from the X & Y values as supplied in a data table uploaded in a tab delimited .txt format. Application currently supports up to seven different groups of highlighting labels with accepted input for gene choice for each group including plot interaction (click or drag select), range of specified values, or input gene list.<br/>
     <br/>
     <br/>
-    <p style=\"background-color:powderblue;\">
-    <b>NOTE:</b> This Shiny is still in progress, but should be functional for most purposes. Please see associated <a href=\"https://github.com/Lisa1254/Plot_label_shiny\"> GitHub</a> for current issues being worked on, or to submit a feature request.
-    </p><br/>
+    
               <b>Source Data:</b><br/>
                Input should be a tab delimited .txt file that includes data to be used in construction of scatterplot.<br/>
                &emsp;<i>Show preview of data:</i> First six rows of data are displayed. This feature can help ensure that the correct file was selected and has uploaded correctly, and which column header is being used for which attribute.<br/>
@@ -476,11 +591,14 @@ shinyServer(function(input, output, session) {
                <i><b>Transformations for y-axis:</i></b> Values for y-axis can be log transformed, reversed, or both.<br/>
                <br/>
                <b>Gene highlight groups:</b><br/>
-               <i><b>How many highlighted groups?:</i></b> Currently app functionality supports up to 3 groups of gene selection for highlighting on the plot. Currently, if a gene belongs to more than one group, only the colour of the highest group number will be displayed, but both groups will be included in the download table of selected genes. The shape of the point will change if a gene belongs to more than one group.<br/>
+               <i><b>Add highlight group:</i></b> Currently app functionality supports up to 7 groups of gene selection for highlighting on the plot. Currently, if a gene belongs to more than one group, only the colour of the highest group number will be displayed, but both groups will be included in the download table of selected genes. The shape of the point will change if a gene belongs to more than one group. Whether or not to inlude the group in the plot and download list can be toggled above the plot. Default state after adding a group is to include. <br/>
                <i><b>Group Name:</i></b> Custom name input for each group to highlight in plot. The name supplied will be used as group identity on the plot legend as well as in the group variable column when downloading the selected gene list. <br/>
                <i><b>Colour for Group:</i></b> Available colours represent the Wong colour palette that has been optimized for colour blind individuals. See <a href=\"https://www.nature.com/articles/nmeth.1618\">Points of view: Color blindness</a> <br/>
                <i><b>Input Type for Group:</i></b> Options include:<br/> 
                &emsp;<i>\"Plot Click\"</i> which allows users to click points on the figure to include in the group, or to select a group of points at the same time by holding the mouse click and dragging to expand. This type includes a button to <i>Reset gene selection,</i> which will clear all points selected in the group by clicking the plot.<br/>
+               <p style=\"background-color:darksalmon;\">
+    <b>NOTE:</b> The plot can lag a bit as it adds new points and features. Be patient. Trying to click points or change attributes while the app is still thinking can cause unexpected behaviour, like assigning a point to the wrong group.
+    </p>
                &emsp;<i>\"Specified Values\"</i> which provides input boxes for numeric values that describe maximum and minimum for each of X and Y values. If log10 transformation has been selected for Y-values, input into Y max/min does not take into account the transformation, and original data value should be used.<br/>
                &emsp;<i>\"Gene Input\"</i> which provides a text box to input genes desired to highlight on plot. Genes can be separated by a comma, space, or newline characater. If a gene is not recognized as being in the set of plotted datapoints, it will be ignored.<br/>
                <br/>
@@ -497,6 +615,10 @@ shinyServer(function(input, output, session) {
                <i><b>Save plot:</b></i> Save pdf image of figure as constructed.<br/>
                <i><b>Save genes:</b></i> All selected genes will be saved as a table with tab separated values. Table will include gene ID, X value, Y value (original, not log10 transformed), and group. Option to order saved table by name, group, x-value, or y-value. <br/>
                <br/>
+               <br/>
+               <p style=\"background-color:powderblue;\">
+    <b>NOTE:</b> This Shiny is still in progress, but should be functional for most purposes. Please see associated <a href=\"https://github.com/Lisa1254/Plot_label_shiny\"> GitHub</a> for current issues being worked on, or to submit a feature request.
+    </p><br/>
          ")
   })
   
@@ -555,6 +677,23 @@ shinyServer(function(input, output, session) {
   #
   #-----------------------Testing Section-------------
   
+  #Using a button to add groups. Will have remove group within each group's section so they don't have to be removed in the same order.
+  counter <- reactiveVal(0)
+  
+  observeEvent(input$add_gp,{
+    if (counter() < 7) {
+      counter(counter() + 1)
+      updateSliderInput(inputId = "num_gps", value = counter())
+      prev_sel <- input$inc_groups
+      updateCheckboxGroupInput(inputId = "inc_groups", inline = TRUE,
+                               choices = paste0("Group ", seq(1,input$num_gps+1)),
+                               selected = c(prev_sel, paste0("Group ", input$num_gps+1)))
+    } else {
+      createAlert(session, "gp_alert", title = "Oops", content = "Maximum group number is seven", append = FALSE)
+    }
+    
+  })
+
   
 })
 
