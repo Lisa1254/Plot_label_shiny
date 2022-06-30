@@ -97,6 +97,23 @@ shinyServer(function(input, output, session) {
   
   #-----------------------Group Vars-------------------------
   
+  #Using a button to add groups. Can remove from plot using checkbox at top of main panel.
+  counter <- reactiveVal(0)
+  
+  observeEvent(input$add_gp,{
+    if (counter() < 7) {
+      counter(counter() + 1)
+      updateSliderInput(inputId = "num_gps", value = counter())
+      prev_sel <- input$inc_groups
+      updateCheckboxGroupInput(inputId = "inc_groups", inline = TRUE,
+                               choices = paste0("Group ", seq(1,input$num_gps+1)),
+                               selected = c(prev_sel, paste0("Group ", input$num_gps+1)))
+    } else {
+      createAlert(session, "gp_alert", title = "Oops", content = "Maximum group number is seven", append = FALSE)
+    }
+    
+  })
+  
   # Set up graphical parameters for genes of interest, up to three groups
   all_labels <- reactive(c(input$gp1, input$gp2, input$gp3, input$gp4, input$gp5, input$gp6, input$gp7)[1:input$num_gps])
  
@@ -630,14 +647,14 @@ shinyServer(function(input, output, session) {
       src = "Ex/fdr_ex_screenshot.png",
       filetype = "image/png",
       alt = "Screenshot of 2 screen comparison",
-      width = "600",
+      width = "550",
       height = "400"
     ))
   }, deleteFile = FALSE)
   
   output$fdr_desc <- renderUI({
     HTML("<br/>Pictured above is a screenshot of using the app to compare the fdr_synth output of drugZ analysis for two screens. When saving the image using the button in the Shiny, only the plot will be saved, not the entire screenshot.<br/><br/>
-         Three groups were selected for adding highligh colours on the plot. CPT & Bleomycin were input using range data to highlight genes with FDR <= 0.01. Notice how ATM has a triangle shape on the plot to indicate that it is included in more than one group. The green points for \"Other\" group were labelled by clicking the points on the plot to select. The \"Current group for labelling\" at the top is selected to the \"Other\" group to indicate that points clicked in the plot get assigned to the correct group.<br/><br/>
+         For the purposes of the example, genes are only identified by index number instead of name. Three groups were selected for adding highligh colours on the plot. CPT & Bleomycin were input using range data to highlight genes with FDR <= 0.01. Notice how gene \"1148\" has a triangle shape on the plot to indicate that it is included in more than one group. The green points for \"Other\" group were labelled by clicking the points on the plot to select. The \"Current group for labelling\" at the top is selected to the \"Other\" group to indicate that points clicked in the plot get assigned to the correct group. Group 3, corresponding to the \"Test\" label has been unclicked at the section for groups to include, so that any genes within that group are not shown in the image or returned in the download of selected genes.<br/><br/>
          The small table at the right of the image shows the gene that the mouse was hovering over at the time of the screenshot.<br/><br/>
          The bottom of the image shows the warning from the ggplot labelling algorithm that was unable to label 21 selected points in the image. As you can see, there are a series of unlabelled points in the upper left corner for the CPT group that are too close together for the program to be able to properly label them in the image. These genes are still included in the saved genes list.<br/><br/>
          Shown below are the first 13 rows of the datatable saved by downloading the genes selected to make the shown image. The display here has rounded to 6 digits, but the saved table will include all digits present in the source data. They were saved in Name order.<br/>"
@@ -656,16 +673,16 @@ shinyServer(function(input, output, session) {
       src = "Ex/volcano_ex_screenshot.png",
       filetype = "image/png",
       alt = "Screenshot of volcano plot constructedfrom MAGeCK data",
-      width = "600",
+      width = "550",
       height = "400"
     ))
   }, deleteFile = FALSE)
   
   output$volcano_desc <- renderUI({
     HTML("<br/>Pictured above is a screenshot of using the app to compare the LFC and Score for each gene from the output of MAGeCK analysis for a single screen. When saving the image using the button in the Shiny, only the plot will be saved, not the entire screenshot.<br/><br/>
-    In this example, 2 columns were selected for the Y-input in order to account for the separation of positive and negative score in MAGeCK output. Log10 transformation and reverse y-axis were also selected to display the most significant genes at the top of the plot, and spaced for ease of viewing.<br/><br/>
-    Three groups were selected for adding highligh colours on the plot. Sensitizer & Resistance were highlighted by using the mouse to click and drag over the sections desired for labelling while the correct group was indicated in the \"Current group for labelling\" section. Notice how NEIL1 has a triangle shape on the plot to indicate that it is included in more than one group. The green points for \"Glycosylase\" group were labelled by inputing a list of gene names into the text box with \"Gene Input\" indicated as group type. When displaying information about a point that the mouse hovers over, the displayed Y-value will be the value as described in the plot, which includes the log10 transformation if selected.<br/><br/>
-         The bottom of the image shows the warning from the ggplot labelling algorithm that was unable to label 8 selected points in the image. As you can see, there are a series of unlabelled points in the in the middle of the plot from the \"Glycosylase\" group that are too close together for the program to be able to properly label them in the image. These genes are still included in the saved genes list.<br/><br/>
+    In this example, 2 columns were selected for the Y-input in order to account for the separation of positive and negative score in MAGeCK output. Log10 transformation and reverse y-axis were also selected. For the purposes of the example, genes are only identified by index number instead of name.<br/><br/>
+    Three groups were selected for adding highligh colours on the plot. Sensitizer & Resistance were highlighted by using the mouse to click and drag over the sections desired for labelling while the correct group was indicated in the \"Current group for labelling\" section. Notice how gene \"1\" has a triangle shape on the plot to indicate that it is included in more than one group. The green points for \"Glycosylase\" group were labelled by inputing a list of gene names into the text box with \"Gene Input\" indicated as group type. When displaying information about a point that the mouse hovers over, the displayed Y-value will be the value as described in the plot, which includes the log10 transformation if selected.<br/><br/>
+         The bottom of the image shows the warning from the ggplot labelling algorithm that was unable to label 9 selected points in the image. As you can see, there are a series of unlabelled points in the in the middle of the plot from the \"Glycosylase\" group that are too close together for the program to be able to properly label them in the image. These genes are still included in the saved genes list.<br/><br/>
          Shown below are the first 6 rows of the datatable saved by downloading the genes selected to make the shown image. The display here has rounded to 4 digits, but the saved table will include all digits present in the source data. They were saved in Name order. The saved Y-values will reflect the original data value from the appropriate Y-input column, not the log10 scaled value.<br/>"
     )
   })
@@ -677,22 +694,8 @@ shinyServer(function(input, output, session) {
   #
   #-----------------------Testing Section-------------
   
-  #Using a button to add groups. Will have remove group within each group's section so they don't have to be removed in the same order.
-  counter <- reactiveVal(0)
-  
-  observeEvent(input$add_gp,{
-    if (counter() < 7) {
-      counter(counter() + 1)
-      updateSliderInput(inputId = "num_gps", value = counter())
-      prev_sel <- input$inc_groups
-      updateCheckboxGroupInput(inputId = "inc_groups", inline = TRUE,
-                               choices = paste0("Group ", seq(1,input$num_gps+1)),
-                               selected = c(prev_sel, paste0("Group ", input$num_gps+1)))
-    } else {
-      createAlert(session, "gp_alert", title = "Oops", content = "Maximum group number is seven", append = FALSE)
-    }
-    
-  })
+  #All clear for now :)
+
 
   
 })
