@@ -575,7 +575,7 @@ shinyServer(function(input, output, session) {
   #-----------------------Help-------------------------
   
   output$help <- renderUI({
-    HTML(" This Shiny application makes a scatterplot from the X & Y values as supplied in a data table uploaded in a tab delimited .txt format. Application currently supports three different groups of highlighting labels with accepted input for gene choice for each group including plot interaction (click or drag select), range of spcified values, or input gene list.<br/>
+    HTML(" This Shiny application makes a scatterplot from the X & Y values as supplied in a data table uploaded in a tab delimited .txt format. Application currently supports up to seven different groups of highlighting labels with accepted input for gene choice for each group including plot interaction (click or drag select), range of specified values, or input gene list.<br/>
     <br/>
     <br/>
     <p style=\"background-color:powderblue;\">
