@@ -15,7 +15,9 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                               bsCollapse(id = "collapseData", open = "Source Data",
                                          bsCollapsePanel("Source Data",
                                                          #Source data
-                                                         fileInput("txt_data", "Supply tab delimited .txt file", width = "100%"),
+                                                         radioButtons("srctype", "Data", choices = c("Input", "FDR Example", "Volcano Example")),
+                                                         conditionalPanel("input.srctype == `Input`",
+                                                                          fileInput("txt_data", "Supply tab delimited .txt file", width = "100%")),
                                                          #Option to preview data two ways
                                                          checkboxInput("preview", "Show preview of data"),
                                                          checkboxInput("summary", "Show summary of data"),
