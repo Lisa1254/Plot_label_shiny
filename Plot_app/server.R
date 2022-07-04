@@ -599,7 +599,7 @@ shinyServer(function(input, output, session) {
     <br/>
     
               <b>Source Data:</b><br/>
-               Input should be a tab delimited .txt file that includes data to be used in construction of scatterplot.<br/>
+              <b><i>Data:</b></i> Options inlcude \"Input\" which should be a tab delimited .txt file that includes data to be used in construction of scatterplot; \"FDR Example\" which is the set of fdr_synth values from a selection of 1000 genes and 4 CRISPR screens as calculated with drugZ; and \"Volcano Example\" which includes a selection of 1000 genes from a single screen's MAGeCK analysis. Example files are provided for practicing the functionality of the app, and have been constructed from the same data used to create the provided examples.<br/>
                &emsp;<i>Show preview of data:</i> First six rows of data are displayed. This feature can help ensure that the correct file was selected and has uploaded correctly, and which column header is being used for which attribute.<br/>
                &emsp;<i>Show summary of data:</i> Shows R-console output of summary command: this includes quartiles and mean for numeric inputs. This can be useful in seeing the distribution of data and helping decide cutoff values for adding colour highlight to a specific range of input values.<br/>
                <br/>
@@ -665,7 +665,10 @@ shinyServer(function(input, output, session) {
   }, deleteFile = FALSE)
   
   output$fdr_desc <- renderUI({
-    HTML("<br/>Pictured above is a screenshot of using the app to compare the fdr_synth output of drugZ analysis for two screens. When saving the image using the button in the Shiny, only the plot will be saved, not the entire screenshot.<br/><br/>
+    HTML("<br/><p style=\"background-color:powderblue;\">
+    To practice with this type of input data, select \"FDR Example\" in the Source Data section. A selection of 1000 genes and 4 screens from drugZ output have their fdr_synth values included.
+    </p>
+    Pictured above is a screenshot of using the app to compare the fdr_synth output of drugZ analysis for two screens. When saving the image using the button in the Shiny, only the plot will be saved, not the entire screenshot.<br/><br/>
          For the purposes of the example, genes are only identified by index number instead of name. Three groups were selected for adding highligh colours on the plot. CPT & Bleomycin were input using range data to highlight genes with FDR <= 0.01. Notice how gene \"1148\" has a triangle shape on the plot to indicate that it is included in more than one group. The green points for \"Other\" group were labelled by clicking the points on the plot to select. The \"Current group for labelling\" at the top is selected to the \"Other\" group to indicate that points clicked in the plot get assigned to the correct group. Group 3, corresponding to the \"Test\" label has been unclicked at the section for groups to include, so that any genes within that group are not shown in the image or returned in the download of selected genes.<br/><br/>
          The small table at the right of the image shows the gene that the mouse was hovering over at the time of the screenshot.<br/><br/>
          The bottom of the image shows the warning from the ggplot labelling algorithm that was unable to label 21 selected points in the image. As you can see, there are a series of unlabelled points in the upper left corner for the CPT group that are too close together for the program to be able to properly label them in the image. These genes are still included in the saved genes list.<br/><br/>
@@ -691,7 +694,10 @@ shinyServer(function(input, output, session) {
   }, deleteFile = FALSE)
   
   output$volcano_desc <- renderUI({
-    HTML("<br/>Pictured above is a screenshot of using the app to compare the LFC and Score for each gene from the output of MAGeCK analysis for a single screen. When saving the image using the button in the Shiny, only the plot will be saved, not the entire screenshot.<br/><br/>
+    HTML("<br/><p style=\"background-color:powderblue;\">
+    To practice with this type of input data, select \"Volcano Example\" in the Source Data section. A selection of 1000 genes have been selected from MAGeCK analysis gene summary output file. X-values have been selected from \"neg.lfc\" since \"neg.lfc\" and \"pos.lfc\" have identical values, and 2-value Y input was selected.
+    </p>
+    Pictured above is a screenshot of using the app to compare the LFC and Score for each gene from the output of MAGeCK analysis for a single screen. When saving the image using the button in the Shiny, only the plot will be saved, not the entire screenshot.<br/><br/>
     In this example, 2 columns were selected for the Y-input in order to account for the separation of positive and negative score in MAGeCK output. Log10 transformation and reverse y-axis were also selected. For the purposes of the example, genes are only identified by index number instead of name.<br/><br/>
     Three groups were selected for adding highligh colours on the plot. Sensitizer & Resistance were highlighted by using the mouse to click and drag over the sections desired for labelling while the correct group was indicated in the \"Current group for labelling\" section. Notice how gene \"1\" has a triangle shape on the plot to indicate that it is included in more than one group. The green points for \"Glycosylase\" group were labelled by inputing a list of gene names into the text box with \"Gene Input\" indicated as group type. When displaying information about a point that the mouse hovers over, the displayed Y-value will be the value as described in the plot, which includes the log10 transformation if selected.<br/><br/>
          The bottom of the image shows the warning from the ggplot labelling algorithm that was unable to label 9 selected points in the image. As you can see, there are a series of unlabelled points in the in the middle of the plot from the \"Glycosylase\" group that are too close together for the program to be able to properly label them in the image. These genes are still included in the saved genes list.<br/><br/>
