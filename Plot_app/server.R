@@ -13,7 +13,17 @@ shinyServer(function(input, output, session) {
   data <- reactive({
     if(input$srctype == "Input"){
       req(input$txt_data)
-      read.delim(file =input$txt_data$datapath)
+      ext <- tools::file_ext(input$txt_data$name)
+      if (ext %in% c("csv", "txt", "tsv")) {
+        switch(ext,
+               txt = read.delim(file =input$txt_data$datapath),
+               tsv = read.delim(file =input$txt_data$datapath),
+               csv = read.csv(input$txt_data$datapath))
+      } else {
+        createAlert(session, "data_alert", title = "Oops", content = "Upload filetype needs to be either a .csv file, or tab-delimited file as .txt or .tsv", append = FALSE, style = "danger")
+      }
+      
+      
     } else if (input$srctype == "FDR Example") {
       read.delim(file = "Ex/sample_drugZ_fdrSynth.txt")
     } else if (input$srctype == "Volcano Example") {
@@ -594,12 +604,12 @@ shinyServer(function(input, output, session) {
   #-----------------------Help-------------------------
   
   output$help <- renderUI({
-    HTML(" This Shiny application makes a scatterplot from the X & Y values as supplied in a data table uploaded in a tab delimited .txt format. Application currently supports up to seven different groups of highlighting labels with accepted input for gene choice for each group including plot interaction (click or drag select), range of specified values, or input gene list.<br/>
+    HTML(" This Shiny application makes a scatterplot from the X & Y values as supplied in a data table uploaded in a tab delimited .txt or .tsv format, or in .csv format. Application currently supports up to seven different groups of highlighting labels with accepted input for gene choice for each group including plot interaction (click or drag select), range of specified values, or input gene list.<br/>
     <br/>
     <br/>
     
               <b>Source Data:</b><br/>
-              <b><i>Data:</b></i> Options inlcude \"Input\" which should be a tab delimited .txt file that includes data to be used in construction of scatterplot; \"FDR Example\" which is the set of fdr_synth values from a selection of 1000 genes and 4 CRISPR screens as calculated with drugZ; and \"Volcano Example\" which includes a selection of 1000 genes from a single screen's MAGeCK analysis. Example files are provided for practicing the functionality of the app, and have been constructed from the same data used to create the provided examples.<br/>
+              <b><i>Data:</b></i> Options inlcude \"Input\" which should be either tab delimited file (.txt or .tsv) or a .csv file that includes data to be used in construction of scatterplot; \"FDR Example\" which is the set of fdr_synth values from a selection of 1000 genes and 4 CRISPR screens as calculated with drugZ; and \"Volcano Example\" which includes a selection of 1000 genes from a single screen's MAGeCK analysis. Example files are provided for practicing the functionality of the app, and have been constructed from the same data used to create the provided examples.<br/>
                &emsp;<i>Show preview of data:</i> First six rows of data are displayed. This feature can help ensure that the correct file was selected and has uploaded correctly, and which column header is being used for which attribute.<br/>
                &emsp;<i>Show summary of data:</i> Shows R-console output of summary command: this includes quartiles and mean for numeric inputs. This can be useful in seeing the distribution of data and helping decide cutoff values for adding colour highlight to a specific range of input values.<br/>
                <br/>
@@ -647,8 +657,11 @@ shinyServer(function(input, output, session) {
                <br/>
                <br/>
                <p style=\"background-color:powderblue;\">
-    <b>NOTE:</b> This Shiny is still in progress, but should be functional for most purposes. Please see associated <a href=\"https://github.com/Lisa1254/Plot_label_shiny\"> GitHub</a> for current issues being worked on, or to submit a feature request.
+    <b>NOTE:</b> This Shiny is still in progress, but should be functional for most purposes. Please see associated <a href=\"https://github.com/Lisa1254/Plot_label_shiny\"> GitHub</a> for current issues being worked on, or to submit a feature request.<br/>
     </p><br/>
+    <b>Updates since initial publish:</b>
+    <ul style=\"list-style-type:disc\">
+    <li><b>July 5, 2022:</b> added additional filetype input options and warning for unsupported type</li>
          ")
   })
   
