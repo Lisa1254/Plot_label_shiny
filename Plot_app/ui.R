@@ -46,7 +46,7 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                                          ), #end Y attributes
                                          bsCollapsePanel("Gene highlight groups",
                                                          #Use button input to add groups
-                                                         actionButton("add_gp", "Add highlight group", style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                                                         actionButton("add_gp", "Add group", style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
                                                          #Alert for too many groups
                                                          bsAlert("gp_alert"),
                                                          tags$br(),
@@ -87,7 +87,8 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                               fluidRow(column(8, plotOutput("scatter", click = "plot_click", hover = "plot_hover", brush = "plot_brush")),
                                        column(3, tableOutput("nT_hover"))),
                               
-                              #Display warnings for unlabelled points
+                              #Give option to show all labels, and display warnings for unlabelled points
+                              checkboxInput("inf_over", "Show all labels"),
                               verbatimTextOutput(outputId='ggplot_warnings'),
                               
                               #Download

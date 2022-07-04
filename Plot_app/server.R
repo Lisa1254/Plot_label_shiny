@@ -211,7 +211,12 @@ shinyServer(function(input, output, session) {
     #Construct on hitting the plot button
     input$plot
     
-    
+    #Define whether to show all labels in dense areas of plot
+    if (input$inf_over == TRUE) {
+      set_ovr <- Inf
+    } else {
+      set_ovr <- 15
+    }
     
     #Set up plotting dataframe
     plot_gp_data <- plot_data()[complete.cases(plot_data()),]
@@ -286,7 +291,7 @@ shinyServer(function(input, output, session) {
         geom_point(aes(x=X_Value, y=Y_Value, color = Gp, shape = Mult), size = 3) +
         scale_color_manual(name = "Groups", labels = c("NA", all_labels()[inc_ind]), values = cols[c(1,1+inc_ind)]) +
         geom_text_repel(aes(x=X_Value, y=Y_Value, label=ifelse(Gp=="Main", '', ID)), 
-                        min.segment.length = 0, size = 3, max.overlaps = 15)
+                        min.segment.length = 0, size = 3, max.overlaps = set_ovr)
 
     }
     
@@ -627,6 +632,7 @@ shinyServer(function(input, output, session) {
                <br/>
                <b>Warnings</b><br/>
                Below the plot, any warning from ggplot for unlabelled data points will be displayed here. Any points that are not labelled on the plot for having too many overlaps with other data points will still be saved within the selected gene lists for download.<br/>
+               To override the aesthetic of not labelling points in areas of the plot that are too dense, click the \"Show all labels\" button.<br/>
                <br/>
                <b>Save</b><br/>
                <i><b>Save plot:</b></i> Save pdf image of figure as constructed.<br/>
