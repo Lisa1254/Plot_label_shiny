@@ -13,7 +13,17 @@ shinyServer(function(input, output, session) {
   data <- reactive({
     if(input$srctype == "Input"){
       req(input$txt_data)
-      read.delim(file =input$txt_data$datapath)
+      ext <- tools::file_ext(input$txt_data$name)
+      if (ext %in% c("csv", "txt", "tsv")) {
+        switch(ext,
+               txt = read.delim(file =input$txt_data$datapath),
+               tsv = read.delim(file =input$txt_data$datapath),
+               csv = read.csv(input$txt_data$datapath))
+      } else {
+        createAlert(session, "data_alert", title = "Oops", content = "Upload filetype needs to be either a .csv file, or tab-delimited file as .txt or .tsv", append = FALSE, style = "danger")
+      }
+      
+      
     } else if (input$srctype == "FDR Example") {
       read.delim(file = "Ex/sample_drugZ_fdrSynth.txt")
     } else if (input$srctype == "Volcano Example") {
