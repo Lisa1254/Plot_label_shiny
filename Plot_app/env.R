@@ -61,10 +61,10 @@ list_split <- function(in_var){
   s <- unlist(strsplit(
     unlist(strsplit(
       unlist(strsplit(
-        unlist(strsplit(toupper(in_var), 
+        unlist(strsplit(in_var, 
                         c("[\n]"))),
         c("[,]"))),
-      c("[:space:]"))),
+      c("[[:space:]]"))),
     c("\\s")))
   s <- s[s != ""]
   
