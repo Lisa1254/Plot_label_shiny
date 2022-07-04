@@ -17,7 +17,7 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                                                          #Source data
                                                          radioButtons("srctype", "Data", choices = c("Input", "FDR Example", "Volcano Example")),
                                                          conditionalPanel("input.srctype == `Input`",
-                                                                          fileInput("txt_data", "Supply tab delimited .txt file", width = "100%", accept = c(".csv", ".txt", ".tsv")),
+                                                                          fileInput("txt_data", "Tab-delimited file (.txt or .tsv), or .csv file", width = "100%", accept = c(".csv", ".txt", ".tsv")),
                                                                           bsAlert("data_alert")),
                                                          #Option to preview data two ways
                                                          checkboxInput("preview", "Show preview of data"),
