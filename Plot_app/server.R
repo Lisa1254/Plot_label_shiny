@@ -11,8 +11,15 @@ shinyServer(function(input, output, session) {
   
   #Receive & verify data
   data <- reactive({
-    req(input$txt_data)
-    read.delim(file =input$txt_data$datapath)
+    if(input$srctype == "Input"){
+      req(input$txt_data)
+      read.delim(file =input$txt_data$datapath)
+    } else if (input$srctype == "FDR Example") {
+      read.delim(file = "Ex/sample_drugZ_fdrSynth.txt")
+    } else if (input$srctype == "Volcano Example") {
+      read.delim(file = "Ex/sample_mageck.txt")
+    }
+    
   })
   
   output$file_name <- renderText(paste("Source data:", input$txt_data$name))
@@ -36,7 +43,6 @@ shinyServer(function(input, output, session) {
   
   #Update y options if number of y inputs changed
   observeEvent(input$num_y, {
-    req(input$txt_data)
     choices <- colnames(data())
     if (input$num_y == "1") {
       updateSelectInput(inputId = "y1", choices = c("columns" = "", choices))
