@@ -631,8 +631,9 @@ shinyServer(function(input, output, session) {
                &emsp;<i>\"Gene Input\"</i> which provides a text box to input genes desired to highlight on plot. Genes can be separated by a comma, space, or newline characater. The input is case-sensitive for exact match in gene list as indicated in the \"Labels for data points\" attribute specified. If a gene is not recognized as being in the set of plotted datapoints, it will be ignored.<br/>
                <br/>
                <b>Construct Plot:</b><br/>
-               Figure will not be constructed until the button is clicked, but once constructed will respond to adjustments in real time. When hovering over datapoints on the plot, the associated point information will be displayed to the right of the plot. If log10 transformation has been selected, the Y-value displayed will reflect that transformation.
+               Figure will not be constructed until the button is clicked, but once constructed will respond to adjustments in real time. Clicking \"Construct Plot\" when a plot is already active will remove all points selected by clicking the plot. When hovering over datapoints on the plot, the associated point information will be displayed to the right of the plot. If log10 transformation has been selected, the Y-value displayed will reflect that transformation.
                <br/>
+               <b>Groups to include in plot/save:</b> Different parameters can be tested by adding new groups in the sidebar, then included or removed from the output with the checkbox.<br/>
                <b>Current Group:</b><br/>
                Groups will be identified by label provided by user. Although current app functionality will display all groups described, only groups with input type as \"Plot Click\" will allow selection by clicking points on the plot.<br/>
                <br/>
