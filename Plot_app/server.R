@@ -637,7 +637,7 @@ shinyServer(function(input, output, session) {
                <p style=\"background-color:darksalmon;\">
     <b>NOTE:</b> The plot can lag a bit as it adds new points and features. Be patient. Trying to click points or change attributes while the app is still thinking can cause unexpected behaviour, like assigning a point to the wrong group.
     </p>
-               &emsp;<i>\"Specified Values\"</i> which provides input boxes for numeric values that describe maximum and minimum for each of X and Y values. If log10 transformation has been selected for Y-values, input into Y max/min does not take into account the transformation, and original data value should be used.<br/>
+               &emsp;<i>\"Specified Values\"</i> which provides input boxes for numeric values that describe maximum and minimum for each of X and Y values. All 4 values are taken into account when determining which points should be labelled, and should be updated if using this feature. If log10 transformation has been selected for Y-values, input into Y max/min does not take into account the transformation, and original data value should be used.<br/>
                &emsp;<i>\"Gene Input\"</i> which provides a text box to input genes desired to highlight on plot. Genes can be separated by a comma, space, or newline characater. The input is case-sensitive for exact match in gene list as indicated in the \"Labels for data points\" attribute specified. If a gene is not recognized as being in the set of plotted datapoints, it will be ignored.<br/>
                <br/>
                <b>Construct Plot:</b><br/>
