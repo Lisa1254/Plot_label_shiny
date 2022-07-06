@@ -677,6 +677,7 @@ shinyServer(function(input, output, session) {
     <b>Updates since initial publish:</b>
     <ul style=\"list-style-type:disc\">
     <li><b>July 5, 2022:</b> added additional filetype input options and warning for unsupported type</li>
+    <li><b>July 6, 2022:</b> allow non-numeric input for X-axis</li>
          ")
   })
   
