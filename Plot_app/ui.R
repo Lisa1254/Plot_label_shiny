@@ -2,6 +2,7 @@ source("env.R")
 
 ## UI ----
 shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
+                   #--------PlotPanel-------------------
                  tabPanel("Plot",
                           #Title
                           titlePanel("Scatterplot with Custom Labels"),
@@ -107,6 +108,8 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                           ) #end sidebarLayout
                           
                  ), #end Plot tab
+            
+          #---------------OtherPanels----------------
                  
                  tabPanel("Help", 
                           titlePanel("Help Documentation"),
@@ -121,7 +124,14 @@ shinyUI(navbarPage("Custom Scatterplots", id = "tabs",
                           titlePanel("Example of Volcano Plot from MAGeCK Data"),
                           imageOutput("volcano_image"),
                           htmlOutput("volcano_desc"),
-                          tableOutput("volcano_table"))
+                          tableOutput("volcano_table")),
+                  tabPanel("Example 3",
+                          titlePanel("Example of Non-Numeric X-Input"),
+                          imageOutput("nnx_image1"),
+                          htmlOutput("nnx_desc1"),
+                          imageOutput("nnx_image2"),
+                          htmlOutput("nnx_desc2"),
+                          tableOutput("nnx_table"))
   
 ) #end navbar Page
 ) #end ui

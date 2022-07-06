@@ -73,9 +73,9 @@ list_split <- function(in_var){
 
 #
 #Function to return genes within desired range ----
-subset_genes <- function(df, colx, minx, maxx, all_y, miny, maxy, vecN){
+subset_genes <- function(df, all_x, minx, maxx, all_y, miny, maxy, vecN){
   genes_ind <- which((all_y >= miny) & (all_y <= maxy) 
-                     & (df[,colx] >= minx) & (df[,colx] <= maxx))
+                     & (all_x >= minx) & (all_x <= maxx))
   genes_sub <- vecN[genes_ind]
   return(genes_sub)
 }
