@@ -95,16 +95,32 @@ shinyServer(function(input, output, session) {
     }
   })
   
+  #If non-numeric column selected for X-values, assign pseudo x-value based on order
+  x_vals <- reactive({
+    req(input$plot)
+    if (class(data()[,input$x]) == "numeric"){
+      XVAL <- data()[,input$x]
+    } else {
+      ord <- order(data()[,input$x])
+      XVAL <- seq(1,nrow(data()))
+      for (i in 1:length(ord)){
+        XVAL[ord[i]] <- i
+      }
+    }
+    return(XVAL)
+  })
+  
+  
   #Construct basic dataframe for plotting
   plot_data <- reactive({
     req(input$plot)
     if ("log10" %in% input$y_trans){
       data.frame(ID = data_names(), 
-                 X_Value = data()[,input$x],
+                 X_Value = x_vals(),
                  Y_Value = log10(y_vals()))
     } else {
       data.frame(ID = data_names(), 
-                 X_Value = data()[,input$x],
+                 X_Value = x_vals(),
                  Y_Value = y_vals())
     }
     
@@ -137,7 +153,6 @@ shinyServer(function(input, output, session) {
     updateRadioButtons(inputId = "current_gp", choices = all_labels(), inline = T)
   })
   
- 
   
   #Set up specified gene inputs:
   #Can't seem to figure out lapply or otherwise reactive use within a loop. Try to clean code later
@@ -145,7 +160,7 @@ shinyServer(function(input, output, session) {
     if (input$type1 == "Gene Input") {
       list_split(input$genes1)[which(list_split(input$genes1) %in% data_names())]
     } else if (input$type1 == "Specified Values") {
-      subset_genes(data(), input$x, as.numeric(input$minX1), as.numeric(input$maxX1), 
+      subset_genes(data(), x_vals(), as.numeric(input$minX1), as.numeric(input$maxX1), 
                    y_vals(), as.numeric(input$minY1), as.numeric(input$maxY1), data_names())
     } else {
       vector()
@@ -156,7 +171,7 @@ shinyServer(function(input, output, session) {
     if (input$type2 == "Gene Input") {
       list_split(input$genes2)[which(list_split(input$genes2) %in% data_names())]
     } else if (input$type2 == "Specified Values") {
-      subset_genes(data(), input$x, as.numeric(input$minX2), as.numeric(input$maxX2), 
+      subset_genes(data(), x_vals(), as.numeric(input$minX2), as.numeric(input$maxX2), 
                    y_vals(), as.numeric(input$minY2), as.numeric(input$maxY2), data_names())
     } else {
       vector()
@@ -167,7 +182,7 @@ shinyServer(function(input, output, session) {
     if (input$type3 == "Gene Input") {
       list_split(input$genes3)[which(list_split(input$genes3) %in% data_names())]
     } else if (input$type3 == "Specified Values") {
-      subset_genes(data(), input$x, as.numeric(input$minX3), as.numeric(input$maxX3), 
+      subset_genes(data(), x_vals(), as.numeric(input$minX3), as.numeric(input$maxX3), 
                    y_vals(), as.numeric(input$minY3), as.numeric(input$maxY3), data_names())
     } else {
       vector()
@@ -178,7 +193,7 @@ shinyServer(function(input, output, session) {
     if (input$type4 == "Gene Input") {
       list_split(input$genes4)[which(list_split(input$genes4) %in% data_names())]
     } else if (input$type4 == "Specified Values") {
-      subset_genes(data(), input$x, as.numeric(input$minX4), as.numeric(input$maxX4), 
+      subset_genes(data(), x_vals(), as.numeric(input$minX4), as.numeric(input$maxX4), 
                    y_vals(), as.numeric(input$minY4), as.numeric(input$maxY4), data_names())
     } else {
       vector()
@@ -189,7 +204,7 @@ shinyServer(function(input, output, session) {
     if (input$type5 == "Gene Input") {
       list_split(input$genes5)[which(list_split(input$genes5) %in% data_names())]
     } else if (input$type5 == "Specified Values") {
-      subset_genes(data(), input$x, as.numeric(input$minX5), as.numeric(input$maxX5), 
+      subset_genes(data(), x_vals(), as.numeric(input$minX5), as.numeric(input$maxX5), 
                    y_vals(), as.numeric(input$minY5), as.numeric(input$maxY5), data_names())
     } else {
       vector()
@@ -200,7 +215,7 @@ shinyServer(function(input, output, session) {
     if (input$type6 == "Gene Input") {
       list_split(input$genes6)[which(list_split(input$genes6) %in% data_names())]
     } else if (input$type6 == "Specified Values") {
-      subset_genes(data(), input$x, as.numeric(input$minX6), as.numeric(input$maxX6), 
+      subset_genes(data(), x_vals(), as.numeric(input$minX6), as.numeric(input$maxX6), 
                    y_vals(), as.numeric(input$minY6), as.numeric(input$maxY6), data_names())
     } else {
       vector()
@@ -211,7 +226,7 @@ shinyServer(function(input, output, session) {
     if (input$type7 == "Gene Input") {
       list_split(input$genes7)[which(list_split(input$genes7) %in% data_names())]
     } else if (input$type7 == "Specified Values") {
-      subset_genes(data(), input$x, as.numeric(input$minX7), as.numeric(input$maxX7), 
+      subset_genes(data(), x_vals(), as.numeric(input$minX7), as.numeric(input$maxX7), 
                    y_vals(), as.numeric(input$minY7), as.numeric(input$maxY7), data_names())
     } else {
       vector()
@@ -525,7 +540,7 @@ shinyServer(function(input, output, session) {
         all_genes_t <- c(genes_in1(), selected1())
         all_genes_t_ind <- which(data_names() %in% all_genes_t)
         dl_gene_dft <- data.frame(Gene = all_genes_t, 
-                                 Xval = data()[all_genes_t_ind,input$x],
+                                 Xval = x_vals()[all_genes_t_ind],
                                  Yval = y_vals()[all_genes_t_ind],
                                  Group = rep(input$gp1, length(all_genes_t)))
         dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
@@ -534,7 +549,7 @@ shinyServer(function(input, output, session) {
         all_genes_t <- c(genes_in2(), selected2())
         all_genes_t_ind <- which(data_names() %in% all_genes_t)
         dl_gene_dft <- data.frame(Gene = all_genes_t, 
-                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Xval = x_vals()[all_genes_t_ind],
                                   Yval = y_vals()[all_genes_t_ind],
                                   Group = rep(input$gp2, length(all_genes_t)))
         dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
@@ -543,7 +558,7 @@ shinyServer(function(input, output, session) {
         all_genes_t <- c(genes_in3(), selected3())
         all_genes_t_ind <- which(data_names() %in% all_genes_t)
         dl_gene_dft <- data.frame(Gene = all_genes_t, 
-                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Xval = x_vals()[all_genes_t_ind],
                                   Yval = y_vals()[all_genes_t_ind],
                                   Group = rep(input$gp3, length(all_genes_t)))
         dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
@@ -552,7 +567,7 @@ shinyServer(function(input, output, session) {
         all_genes_t <- c(genes_in4(), selected4())
         all_genes_t_ind <- which(data_names() %in% all_genes_t)
         dl_gene_dft <- data.frame(Gene = all_genes_t, 
-                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Xval = x_vals()[all_genes_t_ind],
                                   Yval = y_vals()[all_genes_t_ind],
                                   Group = rep(input$gp4, length(all_genes_t)))
         dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
@@ -561,7 +576,7 @@ shinyServer(function(input, output, session) {
         all_genes_t <- c(genes_in5(), selected5())
         all_genes_t_ind <- which(data_names() %in% all_genes_t)
         dl_gene_dft <- data.frame(Gene = all_genes_t, 
-                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Xval = x_vals()[all_genes_t_ind],
                                   Yval = y_vals()[all_genes_t_ind],
                                   Group = rep(input$gp5, length(all_genes_t)))
         dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
@@ -570,7 +585,7 @@ shinyServer(function(input, output, session) {
         all_genes_t <- c(genes_in6(), selected6())
         all_genes_t_ind <- which(data_names() %in% all_genes_t)
         dl_gene_dft <- data.frame(Gene = all_genes_t, 
-                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Xval = x_vals()[all_genes_t_ind],
                                   Yval = y_vals()[all_genes_t_ind],
                                   Group = rep(input$gp6, length(all_genes_t)))
         dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
@@ -579,7 +594,7 @@ shinyServer(function(input, output, session) {
         all_genes_t <- c(genes_in7(), selected7())
         all_genes_t_ind <- which(data_names() %in% all_genes_t)
         dl_gene_dft <- data.frame(Gene = all_genes_t, 
-                                  Xval = data()[all_genes_t_ind,input$x],
+                                  Xval = x_vals()[all_genes_t_ind],
                                   Yval = y_vals()[all_genes_t_ind],
                                   Group = rep(input$gp7, length(all_genes_t)))
         dl_gene_df <- rbind(dl_gene_df, dl_gene_dft)
@@ -617,7 +632,7 @@ shinyServer(function(input, output, session) {
                Labels for data points can be extracted from either rownames of the imported data, or a specific column. Default colour for points is light gray.<br/>
                <br/>
                <b>X-axis Attributes:</b><br/>
-               <b><i>X values:</i></b> Select a column from uploaded data to provide values for X-axis<br/>
+               <b><i>X values:</i></b> Select a column from uploaded data to provide values for X-axis. If a non-numeric column is selected for the X-values, points will be assigned a pseudo X-value in alphabetical order so that the distribution of Y-values can still be observed and explored (See Example 3).<br/>
                <b><i>Attribute name for X values:</i></b> Default name is column name selected for values. This name will be used as the plot's x-axis label, as well as for column header when saving information about selected genes.<br/>
                <br/>
                <b>Y-axis Attributes:</b><br/>
@@ -637,7 +652,7 @@ shinyServer(function(input, output, session) {
                <p style=\"background-color:darksalmon;\">
     <b>NOTE:</b> The plot can lag a bit as it adds new points and features. Be patient. Trying to click points or change attributes while the app is still thinking can cause unexpected behaviour, like assigning a point to the wrong group.
     </p>
-               &emsp;<i>\"Specified Values\"</i> which provides input boxes for numeric values that describe maximum and minimum for each of X and Y values. All 4 values are taken into account when determining which points should be labelled, and should be updated if using this feature. If log10 transformation has been selected for Y-values, input into Y max/min does not take into account the transformation, and original data value should be used.<br/>
+               &emsp;<i>\"Specified Values\"</i> which provides input boxes for numeric values that describe maximum and minimum for each of X and Y values. All 4 values are taken into account when determining which points should be labelled, and should be updated if using this feature. If log10 transformation has been selected for Y-values, input into Y max/min does not take into account the transformation, and original data value should be used. To include all values, \"-Inf\" and \"Inf\" can be used for minimum and maximum respectively.<br/>
                &emsp;<i>\"Gene Input\"</i> which provides a text box to input genes desired to highlight on plot. Genes can be separated by a comma, space, or newline characater. The input is case-sensitive for exact match in gene list as indicated in the \"Labels for data points\" attribute specified. If a gene is not recognized as being in the set of plotted datapoints, it will be ignored.<br/>
                <br/>
                <b>Construct Plot:</b><br/>
@@ -701,7 +716,7 @@ shinyServer(function(input, output, session) {
     return(list(
       src = "Ex/volcano_ex_screenshot.png",
       filetype = "image/png",
-      alt = "Screenshot of volcano plot constructedfrom MAGeCK data",
+      alt = "Screenshot of volcano plot constructed from MAGeCK data",
       width = "550",
       height = "400"
     ))
@@ -721,6 +736,49 @@ shinyServer(function(input, output, session) {
   
   output$volcano_table <- renderTable({
     head(read.delim("Ex/volcano_ex_genes.txt"), 6)
+  }, digits = 4)
+  
+  #
+  
+  #-----------------------Example 3------------------
+  
+  output$nnx_image1 <- renderImage({
+    return(list(
+      src = "Ex/characterX_ex_plot.png",
+      filetype = "image/png",
+      alt = "Screenshot of scatterplot showing normZ values from drugZ",
+      width = "550",
+      height = "400"
+    ))
+  }, deleteFile = FALSE)
+  
+  output$nnx_desc1 <- renderUI({
+    HTML("<br/><p style=\"background-color:powderblue;\">
+    To practice with this type of input data, select \"FDR Example\" in the Source Data section. A selection of 1000 genes and 4 screens from drugZ output have their fdr_synth values included. This plot was constructed selecting \"GENE\" column for both data point labels, and for the X-values.
+    </p>
+    Pictured above is a screenshot of using the app to explore significant FDR values for all genes in single screen. This would also be useful to identify normZ values of a drugZ output that are below or above a certain value. For the purposes of the example, genes are only identified by index number instead of name.<br/><br/>
+    The genes highlighted were selected by using the \"Specified Values\" option, and indicating a Y-value maximum of 0.01. Since all X-values were to be considered for plotting, \"-Inf\" and \"Inf\" were used as the Xmin and Xmax limits. A screenshot of these inputs are shown below.<br/>"
+    )
+  })
+  
+  output$nnx_image2 <- renderImage({
+    return(list(
+      src = "Ex/characterX_ex_geneInput.png",
+      filetype = "image/png",
+      alt = "Screenshot of range inputs for X and Y values",
+      width = "300",
+      height = "400"
+    ))
+  }, deleteFile = FALSE)
+  
+  output$nnx_desc2 <- renderUI({
+    HTML("<br/>
+         Shown below are the first 6 rows of the datatable saved by downloading the genes selected to make the shown image. The display here has rounded to 4 digits, but the saved table will include all digits present in the source data. They were saved in Name order.<br/>"
+    )
+  })
+  
+  output$nnx_table <- renderTable({
+    head(read.delim("Ex/characterX_ex_genes.txt"), 6)
   }, digits = 4)
   
   #
